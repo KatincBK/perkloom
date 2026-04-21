@@ -147,6 +147,17 @@ export default function StartScreen() {
                   <div className="start-recent-date">
                     {r.missing ? 'missing' : formatDate(r.lastOpened)}
                   </div>
+                  <button
+                    className="start-recent-remove"
+                    title="Listeden kaldır (dosya silinmez)"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRecentFile(r.path);
+                      setRecents((xs) => xs.filter((x) => x.path !== r.path));
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>

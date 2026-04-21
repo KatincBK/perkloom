@@ -1,6 +1,106 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useStore } from '../store';
 import { EdgeData, FieldDefinition, FieldType, SkillNode, PoolEntry, edgeId } from '../types';
+
+const INSPECTOR_WIDTH_KEY = 'perkloom-inspector-width';
+const INSPECTOR_MIN = 240;
+const INSPECTOR_MAX = 720;
+
+function loadInspectorWidth(): number {
+  try {
+    const raw = localStorage.getItem(INSPECTOR_WIDTH_KEY);
+    if (!raw) return 280;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n)) return 280;
+    return Math.min(INSPECTOR_MAX, Math.max(INSPECTOR_MIN, n));
+  } catch {
+    return 280;
+  }
+}
+
+function applyInspectorWidth(w: number): void {
+  document.documentElement.style.setProperty('--inspector-width', `${w}px`);
+}
+
+// Apply persisted width synchronously at import time so first render isn't
+// stuck at the default before an effect fires.
+if (typeof document !== 'undefined') {
+  applyInspectorWidth(loadInspectorWidth());
+}
+
+function InspectorResizeHandle() {
+  const dragging = useRef(false);
+  const onDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragging.current = true;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = (ev: MouseEvent) => {
+      if (!dragging.current) return;
+      const next = Math.min(
+        INSPECTOR_MAX,
+        Math.max(INSPECTOR_MIN, window.innerWidth - ev.clientX),
+      );
+      applyInspectorWidth(next);
+    };
+    const onUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      const cur = getComputedStyle(document.documentElement)
+        .getPropertyValue('--inspector-width')
+        .trim();
+      const px = parseInt(cur, 10);
+      if (Number.isFinite(px)) {
+        try {
+          localStorage.setItem(INSPECTOR_WIDTH_KEY, String(px));
+        } catch {
+          // ignore storage errors
+        }
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+  const onDoubleClick = () => {
+    applyInspectorWidth(280);
+    try {
+      localStorage.setItem(INSPECTOR_WIDTH_KEY, '280');
+    } catch {
+      // ignore storage errors
+    }
+  };
+  return (
+    <div
+      className="inspector-resize-handle"
+      onMouseDown={onDown}
+      onDoubleClick={onDoubleClick}
+      title="Sürükle: genişlet/daralt — Çift tıkla: sıfırla"
+    />
+  );
+}
+
+function AutoGrowTextarea({
+  minRows = 2,
+  maxPx = 480,
+  ...rest
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  minRows?: number;
+  maxPx?: number;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const next = Math.min(el.scrollHeight, maxPx);
+    el.style.height = `${next}px`;
+  }, [rest.value, maxPx]);
+  return <textarea ref={ref} rows={minRows} {...rest} />;
+}
 
 // ============================================================
 //  PRESET COLORS (36)
@@ -516,7 +616,7 @@ function FieldEditor({
 
       {field.type === 'text' && (
         <>
-          <textarea
+          <AutoGrowTextarea
             className="inspector-textarea"
             value={(value as string) ?? ''}
             onChange={(e) =>
@@ -524,7 +624,7 @@ function FieldEditor({
                 .getState()
                 .setFieldValue(node.id, field.id, e.target.value)
             }
-            rows={3}
+            minRows={3}
           />
           <label className="show-on-map-toggle">
             <input
@@ -611,6 +711,7 @@ function EdgeInspector({
 }) {
   return (
     <div className="inspector">
+      <InspectorResizeHandle />
       <div className="inspector-header">Connection</div>
       <div className="inspector-content">
         <div className="inspector-info">
@@ -638,9 +739,9 @@ function EdgeInspector({
 
         <div className="inspector-field">
           <label className="inspector-label">Açıklama</label>
-          <textarea
+          <AutoGrowTextarea
             className="inspector-textarea"
-            rows={4}
+            minRows={4}
             value={edge.description}
             placeholder="Bağlantının ne anlama geldiğini açıklayın..."
             onChange={(e) =>
@@ -754,6 +855,7 @@ export default function Inspector() {
   if (!node) {
     return (
       <div className="inspector">
+        <InspectorResizeHandle />
         <div className="inspector-header">Inspector</div>
         <div className="inspector-empty">
           <p>No node selected</p>
@@ -779,6 +881,7 @@ export default function Inspector() {
 
   return (
     <div className="inspector">
+      <InspectorResizeHandle />
       <div className="inspector-header">Inspector</div>
       <div className="inspector-content">
         {/* Data Type Selector — flowchart locks this to a single fixed type */}

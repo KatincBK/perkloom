@@ -1,15 +1,21 @@
-use tauri::{Emitter, Manager};
+use std::sync::Mutex;
+use tauri::{Emitter, Manager, State};
 
-fn collect_file_args(argv: &[String]) -> Vec<String> {
+struct PendingFiles(Mutex<Vec<String>>);
+
+fn extract_file_paths(argv: &[String]) -> Vec<String> {
     argv.iter()
         .skip(1)
-        .filter(|a| !a.starts_with("--") && !a.starts_with('-'))
-        .filter(|a| {
-            let lower = a.to_lowercase();
-            lower.ends_with(".perkloom") || lower.ends_with(".json")
-        })
+        .filter(|a| !a.starts_with('-'))
+        .filter(|a| !a.is_empty())
         .cloned()
         .collect()
+}
+
+#[tauri::command]
+fn take_pending_files(state: State<'_, PendingFiles>) -> Vec<String> {
+    let mut guard = state.0.lock().unwrap();
+    std::mem::take(&mut *guard)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,12 +26,19 @@ pub fn run() {
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(
             |app, argv, _cwd| {
-                let files = collect_file_args(&argv);
+                let files = extract_file_paths(&argv);
                 if files.is_empty() {
                     return;
                 }
                 if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.unminimize();
                     let _ = window.set_focus();
+                }
+                // Queue first so the frontend can pick it up even if the emit
+                // is missed; also emit for live delivery when listener is ready.
+                {
+                    let state: State<PendingFiles> = app.state();
+                    state.0.lock().unwrap().extend(files.clone());
                 }
                 let _ = app.emit("open-files", files);
             },
@@ -33,19 +46,17 @@ pub fn run() {
     }
 
     builder
+        .manage(PendingFiles(Mutex::new(Vec::new())))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .invoke_handler(tauri::generate_handler![take_pending_files])
         .setup(|app| {
             let argv: Vec<String> = std::env::args().collect();
-            let files = collect_file_args(&argv);
+            let files = extract_file_paths(&argv);
             if !files.is_empty() {
-                let handle = app.handle().clone();
-                // Defer so the frontend listener has a chance to attach.
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_millis(800));
-                    let _ = handle.emit("open-files", files);
-                });
+                let state: State<PendingFiles> = app.state();
+                state.0.lock().unwrap().extend(files);
             }
             Ok(())
         })

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import MenuBar from './components/MenuBar';
 import Canvas from './components/Canvas';
 import Inspector from './components/Inspector';
@@ -62,19 +63,35 @@ export default function App() {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let cancelled = false;
+
+    const openPaths = async (paths: string[]) => {
+      for (const p of paths) {
+        await loadProjectFilePath(p);
+      }
+    };
+
+    // Drain any files queued before this component mounted (cold start via
+    // OS file association: the Rust side stashes argv paths into a state
+    // that we pull from here).
+    invoke<string[]>('take_pending_files')
+      .then((paths) => {
+        if (cancelled || !paths || paths.length === 0) return;
+        openPaths(paths);
+      })
+      .catch((err) => console.error('take_pending_files failed', err));
+
+    // Live channel for subsequent opens while the app is already running
+    // (single-instance plugin forwards the new argv through this event).
     listen<string[]>('open-files', (event) => {
       const paths = event.payload ?? [];
-      (async () => {
-        for (const p of paths) {
-          await loadProjectFilePath(p);
-        }
-      })();
+      if (paths.length > 0) openPaths(paths);
     })
       .then((fn) => {
         if (cancelled) fn();
         else unlisten = fn;
       })
       .catch((err) => console.error('open-files listen failed', err));
+
     return () => {
       cancelled = true;
       unlisten?.();

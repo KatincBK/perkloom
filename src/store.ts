@@ -260,8 +260,10 @@ interface TreeStore {
   startScreenOpen: boolean;
   isDirty: boolean;
   minimapVisible: boolean;
+  inspectorWidth: number;
   toasts: Toast[];
 
+  setInspectorWidth: (w: number) => void;
   addNode: (x: number, y: number) => string;
   deleteNode: (id: string) => void;
   selectNode: (id: string | null) => void;
@@ -372,6 +374,7 @@ export interface ProjectData {
   poolTypes: Record<string, PoolType>;
   edges?: Record<string, EdgeData>;
   projectType?: ProjectType;
+  inspectorWidth?: number;
 }
 
 export interface ReadableExport {
@@ -476,6 +479,7 @@ interface TabDocState {
   editingNodeId: string | null;
   currentFilePath: string | null;
   isDirty: boolean;
+  inspectorWidth: number;
   counters: IdCounters;
   undo: Snapshot[];
   redo: Snapshot[];
@@ -490,6 +494,18 @@ export interface TabEntry {
 
 let tabIdSeq = 0;
 const newTabId = () => `tab-${++tabIdSeq}`;
+
+function loadInitialInspectorWidth(): number {
+  try {
+    const raw = localStorage.getItem('perkloom-inspector-width');
+    if (!raw) return 280;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n)) return 280;
+    return Math.min(720, Math.max(240, n));
+  } catch {
+    return 280;
+  }
+}
 
 const freshCounters = (): IdCounters => ({
   nextNodeId: 100,
@@ -521,7 +537,24 @@ export const useStore = create<TreeStore>((set, get) => ({
   startScreenOpen: true,
   isDirty: false,
   minimapVisible: true,
+  inspectorWidth: loadInitialInspectorWidth(),
   toasts: [],
+
+  setInspectorWidth: (w) => {
+    const clamped = Math.min(720, Math.max(240, Math.round(w)));
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty(
+        '--inspector-width',
+        `${clamped}px`,
+      );
+    }
+    try {
+      localStorage.setItem('perkloom-inspector-width', String(clamped));
+    } catch {
+      // ignore storage errors
+    }
+    set({ inspectorWidth: clamped });
+  },
 
   addNode: (x, y) => {
     get().pushHistory();
@@ -1881,8 +1914,9 @@ export const useStore = create<TreeStore>((set, get) => ({
   },
 
   getProjectData: () => {
-    const { nodes, dataTypes, poolTypes, edges, projectType } = get();
-    return { nodes, dataTypes, poolTypes, edges, projectType };
+    const { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth } =
+      get();
+    return { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth };
   },
 
   loadProjectData: (data) => {
@@ -1965,6 +1999,9 @@ export const useStore = create<TreeStore>((set, get) => ({
       selectedEdgeId: null,
       isDirty: false,
     });
+    if (typeof data.inspectorWidth === 'number') {
+      get().setInspectorWidth(data.inspectorWidth);
+    }
     undoStack = [];
     redoStack = [];
   },
@@ -2242,6 +2279,7 @@ export const useStore = create<TreeStore>((set, get) => ({
       Object.assign(counters, snap.counters);
       undoStack = snap.undo;
       redoStack = snap.redo;
+      get().setInspectorWidth(snap.inspectorWidth);
     }
     set((s) => ({
       activeTabId: id,
@@ -2314,6 +2352,7 @@ function captureActiveIntoTab() {
     editingNodeId: s.editingNodeId,
     currentFilePath: s.currentFilePath,
     isDirty: s.isDirty,
+    inspectorWidth: s.inspectorWidth,
     counters: { ...counters },
     undo: undoStack,
     redo: redoStack,

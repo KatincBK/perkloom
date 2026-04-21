@@ -2,30 +2,23 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useStore } from '../store';
 import { EdgeData, FieldDefinition, FieldType, SkillNode, PoolEntry, edgeId } from '../types';
 
-const INSPECTOR_WIDTH_KEY = 'perkloom-inspector-width';
-const INSPECTOR_MIN = 240;
-const INSPECTOR_MAX = 720;
-
-function loadInspectorWidth(): number {
-  try {
-    const raw = localStorage.getItem(INSPECTOR_WIDTH_KEY);
-    if (!raw) return 280;
-    const n = parseInt(raw, 10);
-    if (!Number.isFinite(n)) return 280;
-    return Math.min(INSPECTOR_MAX, Math.max(INSPECTOR_MIN, n));
-  } catch {
-    return 280;
-  }
-}
-
-function applyInspectorWidth(w: number): void {
-  document.documentElement.style.setProperty('--inspector-width', `${w}px`);
-}
-
-// Apply persisted width synchronously at import time so first render isn't
-// stuck at the default before an effect fires.
+// Apply persisted global width synchronously at import so the first render
+// uses the user's last-used width before the store / any loaded project
+// overrides it.
 if (typeof document !== 'undefined') {
-  applyInspectorWidth(loadInspectorWidth());
+  try {
+    const raw = localStorage.getItem('perkloom-inspector-width');
+    const n = raw ? parseInt(raw, 10) : NaN;
+    if (Number.isFinite(n)) {
+      const clamped = Math.min(720, Math.max(240, n));
+      document.documentElement.style.setProperty(
+        '--inspector-width',
+        `${clamped}px`,
+      );
+    }
+  } catch {
+    // ignore storage errors
+  }
 }
 
 function InspectorResizeHandle() {
@@ -38,11 +31,7 @@ function InspectorResizeHandle() {
     document.body.style.userSelect = 'none';
     const onMove = (ev: MouseEvent) => {
       if (!dragging.current) return;
-      const next = Math.min(
-        INSPECTOR_MAX,
-        Math.max(INSPECTOR_MIN, window.innerWidth - ev.clientX),
-      );
-      applyInspectorWidth(next);
+      useStore.getState().setInspectorWidth(window.innerWidth - ev.clientX);
     };
     const onUp = () => {
       dragging.current = false;
@@ -50,28 +39,12 @@ function InspectorResizeHandle() {
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
-      const cur = getComputedStyle(document.documentElement)
-        .getPropertyValue('--inspector-width')
-        .trim();
-      const px = parseInt(cur, 10);
-      if (Number.isFinite(px)) {
-        try {
-          localStorage.setItem(INSPECTOR_WIDTH_KEY, String(px));
-        } catch {
-          // ignore storage errors
-        }
-      }
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
   const onDoubleClick = () => {
-    applyInspectorWidth(280);
-    try {
-      localStorage.setItem(INSPECTOR_WIDTH_KEY, '280');
-    } catch {
-      // ignore storage errors
-    }
+    useStore.getState().setInspectorWidth(280);
   };
   return (
     <div

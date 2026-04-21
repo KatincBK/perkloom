@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
+import { listen } from '@tauri-apps/api/event';
 import MenuBar from './components/MenuBar';
 import Canvas from './components/Canvas';
 import Inspector from './components/Inspector';
@@ -52,6 +53,28 @@ export default function App() {
         else unlisten = fn;
       })
       .catch((err) => console.error('drag-drop listen failed', err));
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    let cancelled = false;
+    listen<string[]>('open-files', (event) => {
+      const paths = event.payload ?? [];
+      (async () => {
+        for (const p of paths) {
+          await loadProjectFilePath(p);
+        }
+      })();
+    })
+      .then((fn) => {
+        if (cancelled) fn();
+        else unlisten = fn;
+      })
+      .catch((err) => console.error('open-files listen failed', err));
     return () => {
       cancelled = true;
       unlisten?.();

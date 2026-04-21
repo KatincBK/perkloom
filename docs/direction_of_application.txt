@@ -1,0 +1,332 @@
+I want you to help me build a local-first desktop application for designing large skill trees for my game.
+
+This is a dedicated skill tree editor, not a generic note app, not a generic diagram app, and not a text-first JSON editor.
+
+Core idea:
+I want to visually build, edit, and organize a large skill tree on a canvas, then export the structure as clean text that I can later give to another AI.
+
+The app should feel a bit playful and tactile, similar in spirit to a creative visual desktop tool like PureRef:
+- desktop-first
+- local-first
+- clean canvas
+- classic top menu bar like File / Edit / View
+- smooth interactions
+- visually pleasant and readable
+- focused and uncluttered
+
+Tech stack:
+- Tauri
+- React
+- TypeScript
+
+Important:
+Please do not overengineer this.
+I want a clear, modular, practical architecture.
+Build it incrementally.
+After each major step, explain what you changed, which files you created/updated, and what I should do next.
+
+==================================================
+PRODUCT GOAL
+==================================================
+
+Build a desktop application where I can:
+
+- create skill nodes visually
+- drag them around on a large canvas
+- connect them with clean lines
+- assign title and description to each node
+- navigate the canvas with zoom and pan
+- save/load project files locally
+- undo/redo changes
+- export the skill tree as structured JSON and readable Markdown
+
+The app must be visual-first.
+I do NOT want to manually write raw text to create the tree.
+Text export is an output, not the primary workflow.
+
+==================================================
+MENTAL MODEL
+==================================================
+
+Treat this app primarily as a rooted tree editor, not a fully general graph editor.
+
+Default rule:
+- each node has only one parent, or is a root
+
+However:
+- multiple parents should be possible as an optional advanced setting that can be enabled later
+- design the data model so this can be supported in the future
+- but do not let this complexity pollute the MVP behavior
+
+So for MVP:
+- assume one-parent tree logic by default
+- keep future extensibility in mind
+
+Subtree movement is very important.
+
+==================================================
+DESKTOP APP SHAPE
+==================================================
+
+The app should resemble a focused desktop creative tool.
+
+Expected structure:
+- classic top menu bar:
+  - File
+  - Edit
+  - View
+  - maybe Help later
+- main canvas in the center
+- optional left toolbar or top toolbar for basic tools
+- inspector / side panel for selected node details
+- mode toggle somewhere visible
+- minimal but polished UI
+
+Please keep the UI practical and elegant, not bloated.
+
+==================================================
+CORE MVP FEATURES
+==================================================
+
+Please build the first usable version with these features:
+
+1. Large canvas
+2. Zoom in / zoom out
+3. Pan
+4. Create node
+5. Delete node
+6. Select node
+7. Edit node title
+8. Edit node description
+9. Connect nodes with parent-child relationships
+10. Clean curved connection lines
+11. Drag nodes
+12. Save locally
+13. Load locally
+14. Undo / Redo
+15. Export as JSON
+16. Export as Markdown
+17. Two interaction modes:
+   - Static Mode
+   - Responsive Mode
+
+==================================================
+INTERACTION MODES
+==================================================
+
+The distinction between these two modes is one of the most important parts of the app.
+
+-------------------------
+1. STATIC MODE
+-------------------------
+
+Purpose:
+Preserve the user-composed shape of the tree.
+
+Rules:
+- nodes should NOT constantly push each other around
+- if the user is not dragging and nodes are not overlapping, positions remain exactly where they are
+- if I drag a parent node, its whole subtree moves together
+- if I drag a child node, that child and its descendants move together
+- connection lengths stay as the user arranged them
+- the app should not auto-relayout the full tree in static mode
+- only local overlap handling should happen when needed
+
+Collision handling in Static Mode:
+- if nodes overlap, resolve it locally
+- prefer sliding the overlapping node around its parent angularly
+- try to preserve the distance to the parent
+- avoid changing connection length if possible
+- avoid disturbing the overall handmade composition
+
+Interpretation:
+Static Mode should feel stable, intentional, handcrafted.
+
+-------------------------
+2. RESPONSIVE MODE
+-------------------------
+
+Purpose:
+Create a lively, self-adjusting, toy-like layout behavior.
+
+Rules:
+- nearby nodes repel each other
+- parent-child connections behave like soft springs
+- edge lengths can stretch or shrink
+- dragging one node can cause local reactions in nearby nodes
+- after drag stops, nodes softly settle into place
+- damping should be high enough that the system never feels chaotic
+
+Important weight rule:
+- nodes with larger subtrees should feel heavier and harder to move
+- major branch roots should resist disorder more than leaf nodes
+- this is important because I do not want large parent structures to get messy too easily
+
+Interpretation:
+Responsive Mode should feel alive, elegant, and playful, but still usable and controlled.
+
+==================================================
+MOVEMENT PRINCIPLES
+==================================================
+
+Please implement motion with smooth transitions, not abrupt jumps.
+
+Use ideas like:
+- repulsion between nearby nodes
+- spring-like attraction for connected nodes
+- damping
+- subtree-based mass / inertia
+- smooth settling after interaction
+
+This should NOT feel like a chaotic particle simulation.
+It should feel designer-friendly and readable.
+
+==================================================
+SUBTREE BEHAVIOR
+==================================================
+
+Subtree handling is critical.
+
+Rules:
+- dragging a parent moves the entire subtree
+- dragging a child moves that child and all of its descendants
+- in Static Mode, subtree shape should be preserved as much as possible
+- in Responsive Mode, subtree internals may react softly, but the structure must remain readable
+
+==================================================
+EDGE BEHAVIOR
+==================================================
+
+Connection lines must be clean and readable.
+
+Requirements:
+- smooth curved lines
+- live updates during dragging
+- avoid ugly jitter
+- visually support the hierarchy
+
+Mode-specific behavior:
+- Static Mode: edge lengths are effectively user-defined and stable
+- Responsive Mode: edge lengths can be elastic
+
+==================================================
+DATA MODEL
+==================================================
+
+Please design a practical internal data model.
+
+Each node should have at least:
+- id
+- title
+- description
+- position
+- parentId or parentIds structure that still supports single-parent default logic cleanly
+- childIds or derivable child relationships
+- optional metadata object
+
+The metadata object should allow future expansion such as:
+- node type
+- cost
+- tags
+- unlock conditions
+- category / branch
+- icon reference
+
+Keep the model future-proof, but simple.
+
+==================================================
+SAVE / LOAD / EXPORT
+==================================================
+
+The app is local-first.
+No server.
+No auth.
+No cloud.
+No collaboration features.
+
+Please support:
+- saving project files locally
+- loading project files locally
+- exporting structured JSON
+- exporting readable Markdown
+
+Markdown export should be AI-friendly and human-readable.
+Include for each node:
+- title
+- description
+- parent
+- children
+- metadata if present
+
+==================================================
+ARCHITECTURE
+==================================================
+
+Please keep the architecture modular and readable.
+
+Suggested layers:
+1. App shell / desktop integration
+2. Canvas rendering layer
+3. Graph state/data layer
+4. Interaction layer
+5. Mode behavior layer
+6. Physics / layout response layer
+7. Persistence layer
+8. Undo/redo history layer
+9. Export layer
+
+I want explicit and understandable logic, not abstraction-heavy architecture.
+
+==================================================
+NON-GOALS FOR MVP
+==================================================
+
+Do NOT build these in the first version unless absolutely necessary:
+- cloud sync
+- user accounts
+- backend
+- collaboration
+- Unity import
+- collapse/expand groups
+- advanced theming systems
+- complex multi-parent UI flows
+
+Keep the MVP focused.
+
+==================================================
+DEVELOPMENT STYLE
+==================================================
+
+Build this incrementally in stages.
+
+At the end of each stage, tell me:
+- what was completed
+- which files were created or modified
+- how the current behavior works
+- what the next step should be
+
+Do not jump to a giant final implementation immediately.
+Start with a solid foundation and add features step by step.
+
+==================================================
+FIRST IMPLEMENTATION TASK
+==================================================
+
+Start by scaffolding the project and implementing only the following first:
+
+- Tauri + React + TypeScript setup
+- app shell with a basic desktop-style structure
+- top menu bar concept in the UI (File / Edit / View)
+- zoomable / pannable canvas
+- basic hardcoded node rendering
+- basic edge rendering
+- node selection
+- dragging a node
+- enough structure that later features can be added cleanly
+
+Do not implement every feature at once.
+Start with a clean foundation.
+
+Finally:
+Please explain your implementation plan before writing large amounts of code.
+Then proceed step by step.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { readTextFile } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 import { useStore, ProjectData } from '../store';
 import { ProjectType } from '../types';
 import {
@@ -55,7 +55,7 @@ export default function StartScreen() {
     const fileName = path.split(/[\\/]/).pop() ?? path;
     const isJson = path.toLowerCase().endsWith('.json');
     try {
-      const text = await readTextFile(path);
+      const text = await invoke<string>('read_project_file', { path });
 
       if (isJson) {
         let raw: unknown;

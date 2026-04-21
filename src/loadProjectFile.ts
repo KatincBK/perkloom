@@ -1,4 +1,4 @@
-import { readTextFile } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 import { useStore, ProjectData } from './store';
 import { parseImportedJson } from './importJson';
 import { addRecentFile } from './recentFiles';
@@ -16,7 +16,7 @@ export async function loadProjectFilePath(path: string): Promise<void> {
     return;
   }
   try {
-    const text = await readTextFile(path);
+    const text = await invoke<string>('read_project_file', { path });
     if (isJson) {
       let raw: unknown;
       try {

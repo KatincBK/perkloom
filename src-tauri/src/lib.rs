@@ -18,6 +18,15 @@ fn take_pending_files(state: State<'_, PendingFiles>) -> Vec<String> {
     std::mem::take(&mut *guard)
 }
 
+// Read a file by absolute path without going through the fs plugin's
+// scope system. The fs plugin only grants scope to paths that came from
+// its own dialog — paths handed in via OS file associations are rejected.
+// This command lets us open whatever the user explicitly points us at.
+#[tauri::command]
+fn read_project_file(path: String) -> Result<String, String> {
+    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
@@ -50,7 +59,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![take_pending_files])
+        .invoke_handler(tauri::generate_handler![take_pending_files, read_project_file])
         .setup(|app| {
             let argv: Vec<String> = std::env::args().collect();
             let files = extract_file_paths(&argv);

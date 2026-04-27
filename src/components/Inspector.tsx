@@ -56,23 +56,89 @@ function InspectorResizeHandle() {
   );
 }
 
+// In-memory cache of textarea heights the user has manually set via the
+// native vertical resize grip. Keyed by the textarea's storageKey
+// (e.g. node+field id, or edge id). Lives at module scope so the
+// preference survives node-selection changes within the session, but
+// it is intentionally NOT persisted — closing the app resets every
+// description box back to its auto-grown default.
+const manualHeightsCache = new Map<string, number>();
+
 function AutoGrowTextarea({
+  storageKey,
   minRows = 2,
-  maxPx = 480,
   ...rest
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  storageKey?: string;
   minRows?: number;
-  maxPx?: number;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const [manualHeight, setManualHeight] = useState<number | null>(() =>
+    storageKey ? manualHeightsCache.get(storageKey) ?? null : null,
+  );
+  const lastWidthRef = useRef<number | null>(null);
+
+  // Apply height: either the manually-set value, or auto-grown to fit
+  // the entire content.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (manualHeight !== null) {
+      el.style.height = `${manualHeight}px`;
+      return;
+    }
     el.style.height = 'auto';
-    const next = Math.min(el.scrollHeight, maxPx);
-    el.style.height = `${next}px`;
-  }, [rest.value, maxPx]);
-  return <textarea ref={ref} rows={minRows} {...rest} />;
+    el.style.height = `${el.scrollHeight}px`;
+  }, [rest.value, manualHeight]);
+
+  // When the inspector is resized horizontally the textarea's width
+  // changes, which alters how the text wraps and therefore how tall
+  // the box needs to be. Re-grow only while in default (auto) mode.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const newWidth = entries[0].contentRect.width;
+      if (lastWidthRef.current === newWidth) return;
+      lastWidthRef.current = newWidth;
+      if (manualHeight !== null) return;
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [manualHeight]);
+
+  // The native textarea exposes a resize grip in the bottom-right
+  // corner. Treat a mousedown there followed by a height change as
+  // "user took control" and remember that height for the session.
+  const onMouseDown = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const onGrip =
+      e.clientX >= rect.right - 18 && e.clientY >= rect.bottom - 18;
+    if (!onGrip) return;
+    const startHeight = el.offsetHeight;
+    const onUp = () => {
+      window.removeEventListener('mouseup', onUp);
+      requestAnimationFrame(() => {
+        const finalHeight = el.offsetHeight;
+        if (finalHeight === startHeight) return;
+        if (storageKey) manualHeightsCache.set(storageKey, finalHeight);
+        setManualHeight(finalHeight);
+      });
+    };
+    window.addEventListener('mouseup', onUp);
+  };
+
+  return (
+    <textarea
+      ref={ref}
+      rows={minRows}
+      onMouseDown={onMouseDown}
+      {...rest}
+    />
+  );
 }
 
 // ============================================================
@@ -590,6 +656,8 @@ function FieldEditor({
       {field.type === 'text' && (
         <>
           <AutoGrowTextarea
+            key={`node-${node.id}-${field.id}`}
+            storageKey={`node-${node.id}-${field.id}`}
             className="inspector-textarea"
             value={(value as string) ?? ''}
             onChange={(e) =>
@@ -713,6 +781,8 @@ function EdgeInspector({
         <div className="inspector-field">
           <label className="inspector-label">Açıklama</label>
           <AutoGrowTextarea
+            key={`edge-${edge.id}`}
+            storageKey={`edge-${edge.id}`}
             className="inspector-textarea"
             minRows={4}
             value={edge.description}

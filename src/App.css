@@ -129,7 +129,8 @@ body,
   gap: 6px;
   height: 26px;
   padding: 0 6px 0 10px;
-  max-width: 220px;
+  width: 180px;
+  flex-shrink: 0;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border);
@@ -154,9 +155,10 @@ body,
 }
 
 .tab-title {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 170px;
 }
 
 .tab-dirty {

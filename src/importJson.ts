@@ -586,12 +586,13 @@ function parseReadableExport(
     }
   }
 
-  // Skilltree without explicit edges — synthesize from parent relations
-  if (projectType !== 'flowchart' && Object.keys(edges).length === 0) {
+  // Skilltree: parent ilişkilerinden eksik edge'leri tamamla
+  // (explicit cross-link edges'leri ezmeden)
+  if (projectType !== 'flowchart') {
     for (const n of Object.values(nodes)) {
       if (n.parentId) {
         const eid = edgeId(n.parentId, n.id);
-        edges[eid] = {
+        edges[eid] ??= {
           id: eid,
           fromId: n.parentId,
           toId: n.id,

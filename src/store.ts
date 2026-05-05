@@ -1651,59 +1651,96 @@ export const useStore = create<TreeStore>((set, get) => ({
         ry += w * V_GAP + V_GAP;
       }
     } else if (algorithm === 'radial') {
-      // Radial layout: every node distributes its children at equal angles
-      // around itself, on a ring of radius depth * RING_GAP. Parent direction
-      // is excluded from the fan so children don't overlap the parent.
-      const RING_GAP = 180;
+      // Wedge-based radial: each subtree gets an angular wedge proportional
+      // to its leaf count, recursively subdivided. Nodes sit at depth*RING_GAP
+      // from origin at the wedge midpoint. For a pure tree (no cross-links),
+      // wedges nest without overlap — guarantees no node overlap and no
+      // parent→child edge crossings.
+      const BASE_RING = 240;
+      const MIN_ARC_PER_LEAF = 0.10; // radians per leaf at outermost ring
       const root = roots[0];
-      positions[root] = { x: 0, y: 0 };
 
-      function layoutRadial(
+      // Cycle-safe leaf count
+      const leafCache = new Map<string, number>();
+      function leafCount(id: string, seen: Set<string>): number {
+        if (seen.has(id)) return 1;
+        const cached = leafCache.get(id);
+        if (cached !== undefined) return cached;
+        seen.add(id);
+        const kids = childrenOf[id] || [];
+        const n = kids.length === 0
+          ? 1
+          : kids.reduce((s, c) => s + leafCount(c, seen), 0) || 1;
+        seen.delete(id);
+        leafCache.set(id, n);
+        return n;
+      }
+
+      // Max depth from a given node (cycle-safe)
+      const depthCache = new Map<string, number>();
+      function maxDepth(id: string, seen: Set<string>): number {
+        if (seen.has(id)) return 0;
+        const cached = depthCache.get(id);
+        if (cached !== undefined) return cached;
+        seen.add(id);
+        const kids = childrenOf[id] || [];
+        const d = kids.length === 0
+          ? 0
+          : 1 + Math.max(...kids.map((c) => maxDepth(c, seen)));
+        seen.delete(id);
+        depthCache.set(id, d);
+        return d;
+      }
+
+      positions[root] = { x: 0, y: 0 };
+      placed.add(root);
+
+      function placeWedge(
         id: string,
-        cx: number,
-        cy: number,
-        parentAngle: number | null,
         depth: number,
+        angleStart: number,
+        angleEnd: number,
       ) {
-        if (placed.has(id)) return;
-        placed.add(id);
         const kids = (childrenOf[id] || []).filter((k) => !placed.has(k));
         if (kids.length === 0) return;
-        const r = RING_GAP;
 
-        let angles: number[];
-        if (parentAngle === null) {
-          // Root: full circle, equal slices
-          const step = (Math.PI * 2) / kids.length;
-          angles = kids.map((_, i) => i * step - Math.PI / 2);
-        } else {
-          // Non-root: distribute equally in an arc facing away from parent.
-          // Arc spans up to 2π/3 * 2 around the outward direction.
-          const outward = parentAngle + Math.PI;
-          if (kids.length === 1) {
-            angles = [outward];
-          } else {
-            const span = Math.min(Math.PI * 1.2, (Math.PI * 2 * (kids.length - 1)) / kids.length);
-            const step = span / (kids.length - 1);
-            const start = outward - span / 2;
-            angles = kids.map((_, i) => start + i * step);
-          }
+        // Ensure outermost ring of this subtree gives every leaf at least
+        // MIN_ARC_PER_LEAF of arc — push the ring outward if needed.
+        const subLeaves = leafCount(id, new Set());
+        const subDepth = maxDepth(id, new Set());
+        const wedgeSpan = angleEnd - angleStart;
+        const outerDepth = depth + Math.max(1, subDepth);
+        const requiredOuter =
+          (subLeaves * MIN_ARC_PER_LEAF) / Math.max(wedgeSpan, 0.001);
+        const ringGap = Math.max(BASE_RING, requiredOuter / outerDepth);
+
+        const totalLeaves = kids.reduce(
+          (s, c) => s + leafCount(c, new Set()),
+          0,
+        ) || 1;
+
+        let a = angleStart;
+        for (const kid of kids) {
+          const kidLeaves = leafCount(kid, new Set());
+          const kidWedge = (kidLeaves / totalLeaves) * wedgeSpan;
+          const mid = a + kidWedge / 2;
+          const r = depth * ringGap;
+          positions[kid] = { x: Math.cos(mid) * r, y: Math.sin(mid) * r };
+          placed.add(kid);
+          placeWedge(kid, depth + 1, a, a + kidWedge);
+          a += kidWedge;
         }
-
-        kids.forEach((kid, i) => {
-          const a = angles[i];
-          const kx = cx + Math.cos(a) * r;
-          const ky = cy + Math.sin(a) * r;
-          positions[kid] = { x: kx, y: ky };
-          layoutRadial(kid, kx, ky, a, depth + 1);
-        });
       }
-      layoutRadial(root, 0, 0, null, 1);
-      // Place orphan roots
+
+      // Root gets the full circle, starting from the top (-π/2)
+      placeWedge(root, 1, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2);
+
+      // Place any orphan roots in their own concentric rings to the side
       let ox = 400;
       for (const rid of roots) {
-        if (rid === root) continue;
+        if (rid === root || placed.has(rid)) continue;
         positions[rid] = { x: ox, y: 0 };
+        placed.add(rid);
         ox += H_GAP;
       }
     } else if (algorithm === 'layered' || algorithm === 'layered-td') {

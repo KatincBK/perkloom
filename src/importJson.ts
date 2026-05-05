@@ -22,7 +22,7 @@ export interface ImportOk {
   kind: 'readable' | 'generic';
   // Set when the source had no positions and Perkloom should run its layout
   // engine after loadProjectData. Null means positions came from the source.
-  suggestedLayout: 'horizontal' | 'tree' | null;
+  suggestedLayout: 'horizontal' | 'tree' | 'radial' | null;
 }
 
 export interface ImportError {
@@ -41,7 +41,7 @@ export function parseImportedJson(raw: unknown): ImportOk | ImportError {
   if (looksLikeReadableExport(obj)) {
     const r = parseReadableExport(obj);
     if ('error' in r) return r;
-    return { ...r, kind: 'readable', suggestedLayout: null };
+    return { ...r, kind: 'readable' };
   }
   const r = parseGeneric(obj);
   if ('error' in r) return r;
@@ -118,7 +118,11 @@ function parsePosition(obj: Record<string, unknown>): Position | null {
 
 function parseGeneric(
   obj: Record<string, unknown>,
-): { data: ProjectData; warnings: string[]; suggestedLayout: 'horizontal' | null } | ImportError {
+): {
+  data: ProjectData;
+  warnings: string[];
+  suggestedLayout: 'horizontal' | 'radial' | null;
+} | ImportError {
   const nodesRaw = obj.nodes ?? obj.vertices ?? obj.items;
   if (!Array.isArray(nodesRaw)) {
     return {
@@ -389,7 +393,11 @@ const VALID_FIELD_TYPES: readonly FieldType[] = [
 
 function parseReadableExport(
   obj: Record<string, unknown>,
-): { data: ProjectData; warnings: string[] } | ImportError {
+): {
+  data: ProjectData;
+  warnings: string[];
+  suggestedLayout: 'horizontal' | 'radial' | null;
+} | ImportError {
   const nodesRaw = obj.nodes;
   const dataTypesRaw = obj.dataTypes;
   const edgesRaw = obj.edges;
@@ -478,6 +486,7 @@ function parseReadableExport(
   const nodes: Record<string, SkillNode> = {};
   const idByTitle = new Map<string, string>();
   let nodeCount = 100;
+  let anyPositionSpecified = false;
 
   for (let i = 0; i < nodesRaw.length; i++) {
     const raw = nodesRaw[i];
@@ -495,7 +504,9 @@ function parseReadableExport(
     const dtName = stringOf(n.dataType);
     const dtId =
       (dtName && dtIdByName.get(dtName)) ?? Object.keys(dataTypes)[0];
-    const pos = parsePosition(n) ?? { x: 0, y: 0 };
+    const parsed = parsePosition(n);
+    if (parsed) anyPositionSpecified = true;
+    const pos = parsed ?? { x: 0, y: 0 };
     const newId = `node-${nodeCount++}`;
 
     if (idByTitle.has(title)) {
@@ -603,8 +614,17 @@ function parseReadableExport(
     }
   }
 
+  // No positions in the file → suggest a layout. Skilltree defaults to radial
+  // (its strongest visual for parent-child hierarchies); flowchart to horizontal.
+  const suggestedLayout = anyPositionSpecified
+    ? null
+    : projectType === 'flowchart'
+      ? 'horizontal'
+      : 'radial';
+
   return {
     data: { nodes, dataTypes, poolTypes: {}, edges, projectType },
     warnings,
+    suggestedLayout,
   };
 }

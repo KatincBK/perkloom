@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import MenuBar from './components/MenuBar';
@@ -10,13 +11,67 @@ import StartScreen from './components/StartScreen';
 import Toasts from './components/Toasts';
 import TabBar from './components/TabBar';
 import ErrorBoundary from './components/ErrorBoundary';
+import RecoveryDialog from './components/RecoveryDialog';
 import { useStore } from './store';
 import { loadProjectFilePath } from './loadProjectFile';
+import {
+  flushNow,
+  loadRecovery,
+  startAutosave,
+  type RecoveryFile,
+} from './autosave';
 import './App.css';
 
 export default function App() {
   const startScreenOpen = useStore((s) => s.startScreenOpen);
   const [dragOver, setDragOver] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryFile | null>(null);
+  const [recoveryChecked, setRecoveryChecked] = useState(false);
+
+  // Check for crash-recovery autosave on first mount, *before* starting the
+  // autosave subscription so we don't overwrite the file with empty state.
+  useEffect(() => {
+    let cancelled = false;
+    loadRecovery()
+      .then((data) => {
+        if (cancelled) return;
+        setRecovery(data);
+        setRecoveryChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setRecoveryChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Start autosave once recovery has been resolved (either applied or
+  // dismissed). Also wire a final flush on window close so the latest edits
+  // make it to disk if the user crashes/quits between debounce ticks.
+  useEffect(() => {
+    if (!recoveryChecked || recovery) return;
+    startAutosave();
+    let unlisten: (() => void) | undefined;
+    let cancelled = false;
+    getCurrentWindow()
+      .onCloseRequested(async () => {
+        try {
+          await flushNow();
+        } catch {
+          // ignore — close shouldn't be blocked by autosave failure
+        }
+      })
+      .then((fn) => {
+        if (cancelled) fn();
+        else unlisten = fn;
+      })
+      .catch((err) => console.error('onCloseRequested listen failed', err));
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [recoveryChecked, recovery]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -127,6 +182,14 @@ export default function App() {
         <div className="drop-overlay">
           <div className="drop-overlay-text">Bırak — dosyayı yeni sekmede aç</div>
         </div>
+      )}
+      {recovery && (
+        <ErrorBoundary>
+          <RecoveryDialog
+            data={recovery}
+            onDone={() => setRecovery(null)}
+          />
+        </ErrorBoundary>
       )}
     </ErrorBoundary>
   );

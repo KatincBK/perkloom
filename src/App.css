@@ -1929,6 +1929,94 @@ body,
   text-align: right;
 }
 
+/* Crash recovery dialog */
+
+.recovery-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  width: 460px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px var(--shadow-color);
+}
+
+.recovery-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.recovery-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+}
+
+.recovery-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.recovery-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recovery-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.recovery-row:hover {
+  border-color: var(--accent);
+}
+
+.recovery-row input[type='checkbox'] {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.recovery-row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.recovery-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recovery-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recovery-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
 /* ============================================================
    START SCREEN
    ============================================================ */

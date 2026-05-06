@@ -113,6 +113,98 @@ function ShortcutsPanel({ onClose }: { onClose: () => void }) {
 }
 
 // ============================================================
+//  SNAP TOOLBAR (engineer / static modes)
+// ============================================================
+
+const ANGLE_SNAP_OPTIONS = [0, 5, 10, 15, 20, 30, 40, 45, 90];
+
+function SnapToolbar({
+  gridSnap,
+  angleSnap,
+}: {
+  gridSnap: boolean;
+  angleSnap: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const angleLabel = angleSnap === 0 ? 'Off' : `${angleSnap}°`;
+
+  return (
+    <div className="snap-toolbar">
+      <button
+        className={`snap-btn${gridSnap ? ' active' : ''}`}
+        title={`Grid Snap: ${gridSnap ? 'On' : 'Off'}`}
+        onClick={() => useStore.getState().setGridSnap(!gridSnap)}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path
+            d="M1 4h12M1 7h12M1 10h12M4 1v12M7 1v12M10 1v12"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span>Grid</span>
+      </button>
+      <div className="snap-angle-wrap" ref={wrapRef}>
+        <button
+          className={`snap-btn${angleSnap > 0 ? ' active' : ''}`}
+          title="Snap parent→child connection angle"
+          onClick={() => setOpen((v) => !v)}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M2 12h10M2 12L10 4"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M2 12 a4 4 0 0 0 3 -1.5"
+              stroke="currentColor"
+              strokeWidth="1"
+              fill="none"
+            />
+          </svg>
+          <span>{angleLabel}</span>
+          <span className="snap-caret">▾</span>
+        </button>
+        {open && (
+          <div className="snap-angle-menu">
+            {ANGLE_SNAP_OPTIONS.map((deg) => (
+              <div
+                key={deg}
+                className={`snap-angle-item${deg === angleSnap ? ' active' : ''}`}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  useStore.getState().setAngleSnap(deg);
+                  setOpen(false);
+                }}
+              >
+                {deg === 0 ? 'Off' : `${deg}°`}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 //  MENU BAR
 // ============================================================
 
@@ -120,6 +212,7 @@ export default function MenuBar() {
   const mode = useStore((s) => s.mode);
   const selectedNodeIds = useStore((s) => s.selectedNodeIds);
   const gridSnap = useStore((s) => s.gridSnap);
+  const angleSnap = useStore((s) => s.angleSnap);
   const demoMode = useStore((s) => s.demoMode);
   const autoTargetLength = useStore((s) => s.autoTargetLength);
   const [autoLenDraft, setAutoLenDraft] = useState<string>(String(autoTargetLength));
@@ -476,6 +569,9 @@ export default function MenuBar() {
           >
             {theme === 'day' ? '\u263E' : '\u2600'}
           </button>
+          {(mode === 'static' || mode === 'engineer') && (
+            <SnapToolbar gridSnap={gridSnap} angleSnap={angleSnap} />
+          )}
           {mode === 'auto' && (
             <div className="auto-length-control" title="Auto mode connection length">
               <span className="auto-length-label">Length</span>

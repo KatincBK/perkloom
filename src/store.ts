@@ -253,6 +253,8 @@ interface TreeStore {
   editingNodeId: string | null;
   mode: InteractionMode;
   gridSnap: boolean;
+  /** 0 = off; otherwise the snap step in degrees (5/10/15/20/30/40/45/90). */
+  angleSnap: number;
   demoMode: boolean;
   autoTargetLength: number;
   theme: 'night' | 'day';
@@ -285,6 +287,7 @@ interface TreeStore {
   setCamera: (patch: Partial<Camera>) => void;
   setMode: (mode: InteractionMode) => void;
   setGridSnap: (enabled: boolean) => void;
+  setAngleSnap: (degrees: number) => void;
   setDemoMode: (enabled: boolean) => void;
   setAutoTargetLength: (length: number) => void;
   setTheme: (theme: 'night' | 'day') => void;
@@ -530,6 +533,7 @@ export const useStore = create<TreeStore>((set, get) => ({
   editingNodeId: null,
   mode: 'static',
   gridSnap: true,
+  angleSnap: 0,
   demoMode: false,
   autoTargetLength: 160,
   theme: 'night',
@@ -905,6 +909,11 @@ export const useStore = create<TreeStore>((set, get) => ({
     set({ mode });
   },
   setGridSnap: (enabled) => set({ gridSnap: enabled }),
+  setAngleSnap: (degrees) => {
+    const allowed = [0, 5, 10, 15, 20, 30, 40, 45, 90];
+    const v = allowed.includes(degrees) ? degrees : 0;
+    set({ angleSnap: v });
+  },
   setDemoMode: (enabled) => set({ demoMode: enabled }),
   setAutoTargetLength: (length) => set({ autoTargetLength: Math.max(20, length) }),
   setTheme: (theme) => {

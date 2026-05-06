@@ -541,6 +541,7 @@ export default function Canvas() {
           camera: cam,
           mode: m,
           gridSnap: snap,
+          angleSnap: angleStep,
           nodes: ns,
           selectedNodeIds: selIds,
         } = useStore.getState();
@@ -567,14 +568,47 @@ export default function Canvas() {
           : dragIds;
 
         if (m === 'static' || m === 'engineer') {
-          if (snap && virtualPosRef.current) {
+          const node = ns[interaction.nodeId];
+          const parent = node?.parentId ? ns[node.parentId] : null;
+          // Angle snap only meaningful for a single dragged node that has a
+          // parent — the snapped angle is the parent→child edge direction.
+          const useAngleSnap =
+            angleStep > 0 && !isMulti && parent && virtualPosRef.current;
+
+          if (useAngleSnap && parent && virtualPosRef.current) {
+            virtualPosRef.current.x += wdx;
+            virtualPosRef.current.y += wdy;
+            const vx = virtualPosRef.current.x - parent.position.x;
+            const vy = virtualPosRef.current.y - parent.position.y;
+            let dist = Math.hypot(vx, vy);
+            if (dist > 0.0001 && node) {
+              const stepRad = (angleStep * Math.PI) / 180;
+              const angle = Math.atan2(vy, vx);
+              const snappedAngle = Math.round(angle / stepRad) * stepRad;
+              // When grid snap is also on, quantize the *distance* (not the
+              // target xy) so the snapped angle stays exact — grid-quantizing
+              // the target shifts the endpoint when the parent isn't aligned
+              // to the grid, which manifests as a 1–2° angular error.
+              if (snap) {
+                dist = Math.max(GRID_SIZE, Math.round(dist / GRID_SIZE) * GRID_SIZE);
+              }
+              const targetX = parent.position.x + Math.cos(snappedAngle) * dist;
+              const targetY = parent.position.y + Math.sin(snappedAngle) * dist;
+              const adx = targetX - node.position.x;
+              const ady = targetY - node.position.y;
+              if (adx !== 0 || ady !== 0) {
+                for (const id of topDragIds) {
+                  useStore.getState().moveSubtree(id, adx, ady);
+                }
+              }
+            }
+          } else if (snap && virtualPosRef.current) {
             virtualPosRef.current.x += wdx;
             virtualPosRef.current.y += wdy;
             const snappedX =
               Math.round(virtualPosRef.current.x / GRID_SIZE) * GRID_SIZE;
             const snappedY =
               Math.round(virtualPosRef.current.y / GRID_SIZE) * GRID_SIZE;
-            const node = ns[interaction.nodeId];
             if (node) {
               const adx = snappedX - node.position.x;
               const ady = snappedY - node.position.y;

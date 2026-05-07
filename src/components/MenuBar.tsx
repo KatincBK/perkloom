@@ -83,6 +83,7 @@ const SHORTCUTS = [
   { key: 'Right-click node', desc: 'Context menu' },
   { key: 'Click + drag empty', desc: 'Box select' },
   { key: 'Drop image on node', desc: 'Set node image' },
+  { key: 'Ctrl+Shift+H', desc: 'Snapshots panel' },
 ];
 
 function ShortcutsPanel({ onClose }: { onClose: () => void }) {
@@ -430,6 +431,11 @@ export default function MenuBar() {
         e.preventDefault();
         handleOpenRef.current();
       }
+      if (e.ctrlKey && e.shiftKey && e.key === 'H') {
+        e.preventDefault();
+        const st = useStore.getState();
+        st.setSnapshotPanelOpen(!st.snapshotPanelOpen);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -500,6 +506,15 @@ export default function MenuBar() {
     {
       label: 'All Nodes Compact',
       action: () => useStore.getState().setAllDisplayMode('compact'),
+    },
+    { divider: true, label: '' },
+    {
+      label: 'Snapshots',
+      shortcut: 'Ctrl+Shift+H',
+      action: () => {
+        const st = useStore.getState();
+        st.setSnapshotPanelOpen(!st.snapshotPanelOpen);
+      },
     },
   ];
 

@@ -12,6 +12,7 @@ import Toasts from './components/Toasts';
 import TabBar from './components/TabBar';
 import ErrorBoundary from './components/ErrorBoundary';
 import RecoveryDialog from './components/RecoveryDialog';
+import SnapshotPanel from './components/SnapshotPanel';
 import { useStore } from './store';
 import { loadProjectFilePath } from './loadProjectFile';
 import {
@@ -24,6 +25,7 @@ import './App.css';
 
 export default function App() {
   const startScreenOpen = useStore((s) => s.startScreenOpen);
+  const snapshotPanelOpen = useStore((s) => s.snapshotPanelOpen);
   const [dragOver, setDragOver] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryFile | null>(null);
   const [recoveryChecked, setRecoveryChecked] = useState(false);
@@ -189,6 +191,11 @@ export default function App() {
             data={recovery}
             onDone={() => setRecovery(null)}
           />
+        </ErrorBoundary>
+      )}
+      {snapshotPanelOpen && (
+        <ErrorBoundary>
+          <SnapshotPanel />
         </ErrorBoundary>
       )}
     </ErrorBoundary>

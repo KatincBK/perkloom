@@ -15,6 +15,7 @@ import {
   ProjectType,
   EdgeData,
   edgeId,
+  NamedSnapshot,
 } from './types';
 
 export const NODE_WIDTH = 160;
@@ -349,6 +350,15 @@ interface TreeStore {
   redo: () => void;
   pushHistory: () => void;
 
+  // Snapshots
+  namedSnapshots: NamedSnapshot[];
+  snapshotPanelOpen: boolean;
+  setSnapshotPanelOpen: (open: boolean) => void;
+  saveSnapshot: (name: string) => void;
+  restoreSnapshot: (id: string) => void;
+  deleteSnapshot: (id: string) => void;
+  renameSnapshot: (id: string, name: string) => void;
+
   // Tabs
   tabs: TabEntry[];
   activeTabId: string | null;
@@ -378,6 +388,21 @@ export interface ProjectData {
   edges?: Record<string, EdgeData>;
   projectType?: ProjectType;
   inspectorWidth?: number;
+  snapshots?: SnapshotEntry[];
+}
+
+/** Full project state stored inside a named snapshot. */
+export interface SnapshotEntry {
+  id: string;
+  name: string;
+  createdAt: number;
+  data: {
+    nodes: Record<string, SkillNode>;
+    dataTypes: Record<string, DataType>;
+    poolTypes: Record<string, PoolType>;
+    edges: Record<string, EdgeData>;
+    projectType: ProjectType;
+  };
 }
 
 export interface ReadableExport {
@@ -458,6 +483,14 @@ let redoStack: Snapshot[] = [];
 // clipboard (module-level, not serialized)
 let clipboard: { nodes: SkillNode[]; rootIds: string[] } | null = null;
 
+// Snapshot full data stored outside Zustand to avoid rerender bloat.
+// The store only keeps lightweight NamedSnapshot metadata; the heavy
+// ProjectData payloads live here, keyed by snapshot id.
+export const snapshotDataMap = new Map<string, SnapshotEntry['data']>();
+
+// Per-tab snapshot data backup used during tab switching
+const tabSnapshotDataBackup = new Map<string, Map<string, SnapshotEntry['data']>>();
+
 function takeSnapshot(s: Snapshot): Snapshot {
   return {
     nodes: JSON.parse(JSON.stringify(s.nodes)),
@@ -486,6 +519,7 @@ interface TabDocState {
   counters: IdCounters;
   undo: Snapshot[];
   redo: Snapshot[];
+  namedSnapshots: NamedSnapshot[];
 }
 
 export interface TabEntry {
@@ -543,6 +577,8 @@ export const useStore = create<TreeStore>((set, get) => ({
   minimapVisible: true,
   inspectorWidth: loadInitialInspectorWidth(),
   toasts: [],
+  namedSnapshots: [],
+  snapshotPanelOpen: false,
 
   setInspectorWidth: (w) => {
     const clamped = Math.min(720, Math.max(240, Math.round(w)));
@@ -1960,9 +1996,20 @@ export const useStore = create<TreeStore>((set, get) => ({
   },
 
   getProjectData: () => {
-    const { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth } =
+    const { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, namedSnapshots } =
       get();
-    return { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth };
+    // Rebuild full SnapshotEntry[] for serialization
+    const snapshots: SnapshotEntry[] | undefined =
+      namedSnapshots.length > 0
+        ? namedSnapshots
+            .map((meta) => {
+              const data = snapshotDataMap.get(meta.id);
+              if (!data) return null;
+              return { id: meta.id, name: meta.name, createdAt: meta.createdAt, data };
+            })
+            .filter((e): e is SnapshotEntry => e !== null)
+        : undefined;
+    return { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, snapshots };
   },
 
   loadProjectData: (data) => {
@@ -2048,6 +2095,18 @@ export const useStore = create<TreeStore>((set, get) => ({
     if (typeof data.inspectorWidth === 'number') {
       get().setInspectorWidth(data.inspectorWidth);
     }
+    // Restore named snapshots from file
+    snapshotDataMap.clear();
+    const loadedMeta: NamedSnapshot[] = [];
+    if (data.snapshots && Array.isArray(data.snapshots)) {
+      for (const entry of data.snapshots) {
+        if (entry.id && entry.data) {
+          snapshotDataMap.set(entry.id, entry.data);
+          loadedMeta.push({ id: entry.id, name: entry.name, createdAt: entry.createdAt });
+        }
+      }
+    }
+    set({ namedSnapshots: loadedMeta });
     undoStack = [];
     redoStack = [];
   },
@@ -2239,6 +2298,67 @@ export const useStore = create<TreeStore>((set, get) => ({
     get().addToast('Redo', 'info');
   },
 
+  // --- Snapshots ---
+
+  setSnapshotPanelOpen: (open) => set({ snapshotPanelOpen: open }),
+
+  saveSnapshot: (name) => {
+    const { nodes, dataTypes, poolTypes, edges, projectType } = get();
+    const entry: SnapshotEntry = {
+      id: `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      createdAt: Date.now(),
+      data: JSON.parse(JSON.stringify({ nodes, dataTypes, poolTypes, edges, projectType })),
+    };
+    const meta: NamedSnapshot = { id: entry.id, name: entry.name, createdAt: entry.createdAt };
+    set((s) => ({
+      namedSnapshots: [...s.namedSnapshots, meta],
+      isDirty: true,
+    }));
+    // Store the full data in module-level map so it doesn't bloat Zustand rerenders
+    snapshotDataMap.set(entry.id, entry.data);
+    get().addToast(`Snapshot saved: ${name}`, 'success');
+  },
+
+  restoreSnapshot: (id) => {
+    const data = snapshotDataMap.get(id);
+    if (!data) {
+      get().addToast('Snapshot data not found', 'error');
+      return;
+    }
+    // Push current state to undo so restore is undoable
+    get().pushHistory();
+    const restored = JSON.parse(JSON.stringify(data));
+    set({
+      nodes: restored.nodes,
+      dataTypes: restored.dataTypes,
+      poolTypes: restored.poolTypes,
+      edges: restored.edges,
+      projectType: restored.projectType,
+      selectedNodeIds: [],
+      selectedEdgeId: null,
+      isDirty: true,
+    });
+    get().addToast('Snapshot restored', 'success');
+  },
+
+  deleteSnapshot: (id) => {
+    snapshotDataMap.delete(id);
+    set((s) => ({
+      namedSnapshots: s.namedSnapshots.filter((sn) => sn.id !== id),
+      isDirty: true,
+    }));
+  },
+
+  renameSnapshot: (id, name) => {
+    set((s) => ({
+      namedSnapshots: s.namedSnapshots.map((sn) =>
+        sn.id === id ? { ...sn, name } : sn,
+      ),
+      isDirty: true,
+    }));
+  },
+
   // --- Tabs ---
 
   newTab: (projectType, title) => {
@@ -2263,10 +2383,12 @@ export const useStore = create<TreeStore>((set, get) => ({
       editingNodeId: null,
       currentFilePath: null,
       isDirty: false,
+      namedSnapshots: [],
     }));
     Object.assign(counters, freshCounters());
     undoStack = [];
     redoStack = [];
+    snapshotDataMap.clear();
     return id;
   },
 
@@ -2325,6 +2447,14 @@ export const useStore = create<TreeStore>((set, get) => ({
       Object.assign(counters, snap.counters);
       undoStack = snap.undo;
       redoStack = snap.redo;
+      // Restore snapshot data for this tab
+      snapshotDataMap.clear();
+      const backup = tabSnapshotDataBackup.get(id);
+      if (backup) {
+        for (const [sid, sdata] of backup) snapshotDataMap.set(sid, sdata);
+        tabSnapshotDataBackup.delete(id);
+      }
+      set({ namedSnapshots: snap.namedSnapshots });
       get().setInspectorWidth(snap.inspectorWidth);
     }
     set((s) => ({
@@ -2350,6 +2480,7 @@ export const useStore = create<TreeStore>((set, get) => ({
         // Last tab closed — fall back to the Start Screen with empty live state.
         undoStack = [];
         redoStack = [];
+        snapshotDataMap.clear();
         Object.assign(counters, freshCounters());
         set({
           tabs: [],
@@ -2357,6 +2488,7 @@ export const useStore = create<TreeStore>((set, get) => ({
           startScreenOpen: true,
           nodes: {},
           dataTypes: {},
+          namedSnapshots: [],
           poolTypes: {},
           edges: {},
           projectType: 'skilltree',
@@ -2402,7 +2534,15 @@ function captureActiveIntoTab() {
     counters: { ...counters },
     undo: undoStack,
     redo: redoStack,
+    namedSnapshots: s.namedSnapshots,
   };
+  // Backup snapshot data for this tab
+  const dataBackup = new Map<string, SnapshotEntry['data']>();
+  for (const meta of s.namedSnapshots) {
+    const d = snapshotDataMap.get(meta.id);
+    if (d) dataBackup.set(meta.id, d);
+  }
+  tabSnapshotDataBackup.set(s.activeTabId, dataBackup);
   useStore.setState((prev) => ({
     tabs: prev.tabs.map((t) =>
       t.id === prev.activeTabId ? { ...t, snapshot } : t,

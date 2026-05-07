@@ -85,3 +85,9 @@ export interface Camera {
   y: number;
   zoom: number;
 }
+
+export interface NamedSnapshot {
+  id: string;
+  name: string;
+  createdAt: number;
+}

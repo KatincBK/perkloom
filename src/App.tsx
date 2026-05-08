@@ -56,12 +56,21 @@ export default function App() {
     startAutosave();
     let unlisten: (() => void) | undefined;
     let cancelled = false;
-    getCurrentWindow()
-      .onCloseRequested(async () => {
+    const win = getCurrentWindow();
+    win
+      .onCloseRequested(async (event) => {
+        // Take ownership of the close: prevent the wrapper's auto-destroy so
+        // a hung flush can't trap the window open, then race the flush
+        // against a short timeout and destroy ourselves no matter what.
+        event.preventDefault();
+        await Promise.race([
+          flushNow().catch(() => undefined),
+          new Promise((resolve) => setTimeout(resolve, 1500)),
+        ]);
         try {
-          await flushNow();
-        } catch {
-          // ignore — close shouldn't be blocked by autosave failure
+          await win.destroy();
+        } catch (err) {
+          console.error('window destroy failed', err);
         }
       })
       .then((fn) => {

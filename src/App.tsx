@@ -3,6 +3,7 @@ import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import { exit } from '@tauri-apps/plugin-process';
 import MenuBar from './components/MenuBar';
 import Canvas from './components/Canvas';
 import Inspector from './components/Inspector';
@@ -63,22 +64,18 @@ export default function App() {
     startAutosave();
     let unlisten: (() => void) | undefined;
     let cancelled = false;
-    const win = getCurrentWindow();
-    win
+    getCurrentWindow()
       .onCloseRequested(async (event) => {
-        // Take ownership of the close: prevent the wrapper's auto-destroy so
-        // a hung flush can't trap the window open, then race the flush
-        // against a short timeout and destroy ourselves no matter what.
+        // window.destroy() proved unreliable in release builds (the X button
+        // would do nothing). Force the entire process to exit instead, after
+        // racing the autosave flush against a short timeout so a slow disk
+        // can't trap the close path.
         event.preventDefault();
         await Promise.race([
           flushNow().catch(() => undefined),
           new Promise((resolve) => setTimeout(resolve, 1500)),
         ]);
-        try {
-          await win.destroy();
-        } catch (err) {
-          console.error('window destroy failed', err);
-        }
+        await exit(0);
       })
       .then((fn) => {
         if (cancelled) fn();

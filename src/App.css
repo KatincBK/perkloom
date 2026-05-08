@@ -212,6 +212,15 @@ body,
   padding-right: 8px;
 }
 
+.version-tag {
+  font-size: 11px;
+  opacity: 0.45;
+  margin-right: 10px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+
 .menu-trigger-container {
   position: relative;
 }

@@ -6,6 +6,7 @@ import { addRecentFile } from '../recentFiles';
 import { ProjectTypePicker, startNewProject } from './StartScreen';
 import { loadProjectFilePath } from '../loadProjectFile';
 import { checkInteractive } from '../updater';
+import { getVersion } from '@tauri-apps/api/app';
 
 interface MenuItem {
   label: string;
@@ -229,6 +230,10 @@ export default function MenuBar() {
   const barRef = useRef<HTMLDivElement>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [pickingType, setPickingType] = useState(false);
+  const [version, setVersion] = useState<string>('');
+  useEffect(() => {
+    getVersion().then(setVersion).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -582,6 +587,14 @@ export default function MenuBar() {
           <Menu label="View" items={viewItems} isOpen={openMenu === 'view'} onOpen={() => toggle('view')} onHover={() => hover('view')} />
         </div>
         <div className="menu-bar-right">
+          {version && (
+            <span
+              className="version-tag"
+              title="Check for Updates → View menu"
+            >
+              v{version}
+            </span>
+          )}
           <button
             className="theme-toggle-btn"
             onClick={() => useStore.getState().setTheme(theme === 'day' ? 'night' : 'day')}

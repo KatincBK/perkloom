@@ -23,7 +23,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "msi", "dmg", "app"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -39,5 +40,13 @@
         "role": "Editor"
       }
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/KatincBK/perkloom/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJGNzlGN0M0MEQ3QTkyMkMKUldRc2tub054UGQ1djZESFY1WmwzSXQ2Q0dJMlBvcFBLUlprVmRxeElnN0lnb25odVVBdS9hTmQK"
+    }
   }
 }

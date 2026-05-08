@@ -5,6 +5,7 @@ import { writeTextFile, writeFile } from '@tauri-apps/plugin-fs';
 import { addRecentFile } from '../recentFiles';
 import { ProjectTypePicker, startNewProject } from './StartScreen';
 import { loadProjectFilePath } from '../loadProjectFile';
+import { checkInteractive } from '../updater';
 
 interface MenuItem {
   label: string;
@@ -564,6 +565,10 @@ export default function MenuBar() {
     {
       label: 'Keyboard Shortcuts',
       action: () => setShowShortcuts(true),
+    },
+    {
+      label: 'Check for Updates...',
+      action: () => { void checkInteractive(); },
     },
   ];
 

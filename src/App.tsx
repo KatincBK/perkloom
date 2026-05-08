@@ -21,6 +21,7 @@ import {
   startAutosave,
   type RecoveryFile,
 } from './autosave';
+import { checkSilently } from './updater';
 import './App.css';
 
 export default function App() {
@@ -29,6 +30,12 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const [recovery, setRecovery] = useState<RecoveryFile | null>(null);
   const [recoveryChecked, setRecoveryChecked] = useState(false);
+
+  // Background check for new releases. Fire-and-forget — failures are
+  // surfaced as console warnings, not user-facing errors.
+  useEffect(() => {
+    void checkSilently();
+  }, []);
 
   // Check for crash-recovery autosave on first mount, *before* starting the
   // autosave subscription so we don't overwrite the file with empty state.

@@ -1,0 +1,2706 @@
+{
+  "projectType": "skilltree",
+  "dataTypes": [
+    {
+      "name": "Normal",
+      "color": "#ffffff",
+      "fields": [
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "Implementation",
+          "type": "text"
+        },
+        {
+          "name": "BaseCost",
+          "type": "number"
+        },
+        {
+          "name": "MaxLevel",
+          "type": "number"
+        },
+        {
+          "name": "CostFormula",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "Future Ideas",
+      "color": "#ef4444",
+      "fields": []
+    },
+    {
+      "name": "Ön koşullu olanlar",
+      "color": "#eab308",
+      "fields": [
+        {
+          "name": "GEREKLİLİK",
+          "type": "text"
+        },
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "Implementation",
+          "type": "text"
+        },
+        {
+          "name": "BaseCost",
+          "type": "number"
+        },
+        {
+          "name": "MaxLevel",
+          "type": "number"
+        },
+        {
+          "name": "CostFormula",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "Buyable",
+      "color": "#84cc16",
+      "fields": [
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "Implementation",
+          "type": "text"
+        },
+        {
+          "name": "BaseCost",
+          "type": "number"
+        },
+        {
+          "name": "MaxLevel",
+          "type": "number"
+        },
+        {
+          "name": "CostFormula",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "Multiple Upgrades",
+      "color": "#67e8f9",
+      "fields": [
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "Implementation",
+          "type": "text"
+        },
+        {
+          "name": "BaseCost",
+          "type": "number"
+        },
+        {
+          "name": "MaxLevel",
+          "type": "number"
+        },
+        {
+          "name": "CostFormula",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "Locked",
+      "color": "#737373",
+      "fields": []
+    },
+    {
+      "name": "PEARL",
+      "color": "#f0abfc",
+      "fields": [
+        {
+          "name": "Description",
+          "type": "text"
+        },
+        {
+          "name": "Implementation",
+          "type": "text"
+        },
+        {
+          "name": "BaseCost",
+          "type": "number"
+        },
+        {
+          "name": "MaxLevel",
+          "type": "number"
+        },
+        {
+          "name": "CostFormula",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "title": "Banana Tree",
+      "dataType": "Multiple Upgrades",
+      "parent": null,
+      "position": {
+        "x": -240,
+        "y": 20
+      },
+      "fields": {
+        "Description": "adanın rastgele bir karesine muz ağacı koyarsın.",
+        "Implementation": "Uygun rastgele bir kum/toprak tile'ına `banana_tree` entity spawn et. Cursor click → HP düşer; HP=0'da `green_banana` item drop'u (fV=1) + fruit_respawn_timer başlar. Multiple Upgrades: her seviyede +1 ağaç (boş tile yoksa pending_queue'ya alınır, yeni tile açılınca yerleşir).",
+        "BaseCost": 1,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Cursor Power",
+      "dataType": "Multiple Upgrades",
+      "parent": "Bigger Island",
+      "position": {
+        "x": 7.286446025991481,
+        "y": -577.0022930948926
+      },
+      "fields": {
+        "Description": "cursor'ın drag ve click gücü artar",
+        "Implementation": "cursor.click_power ve cursor.drag_strength per-level artar (hem damage hem drag etkilenir).",
+        "BaseCost": 5,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Cursor Damage",
+      "dataType": "Multiple Upgrades",
+      "parent": "Cursor Power",
+      "position": {
+        "x": 7.2864460259915065,
+        "y": -927.2976372813833
+      },
+      "fields": {
+        "Description": "click'lerin bir şeylere zarar verme veya kırma gücünü arttırır",
+        "Implementation": "cursor.click_power per-level artar (sadece HP-azaltma damage; drag etkilenmez).",
+        "BaseCost": 30,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Coconut Tree",
+      "dataType": "Normal",
+      "parent": "Sensitive Trees",
+      "position": {
+        "x": -940.0050137393258,
+        "y": 20.000000000000043
+      },
+      "fields": {
+        "Description": "adanın rastgele bir karesine hindistan cevizi palmiyesi koyarsın.",
+        "Implementation": "Uygun rastgele tile'a `coconut_tree` entity spawn et. Cursor click → HP düşer; HP=0'da `coconut` item drop'u + fruit_respawn_timer. coconut'a cursor click → 2 `half_coconut` (fV=2 her biri).",
+        "BaseCost": 50,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Lemon Tree",
+      "dataType": "Normal",
+      "parent": "Self Hanging Trees",
+      "position": {
+        "x": -1639.4367052613238,
+        "y": 19.9999999999999
+      },
+      "fields": {
+        "Description": "adanın rastgele bir karesine limon ağacı koyarsın. limonlar ağaçtan ilk düştüğünde \"yeşil limon\" olarak düşer. güneşte bekledikten sonra sarı limon olur. limon tüketmek oyuncunun ekranının dalgalanmasına sebep olur.",
+        "Implementation": "Uygun rastgele tile'a `lemon_tree` entity spawn et. Drop'u `green_lemon` (fV=8, kalibre — yellow'dan düşük). green_lemon güneşte sun_exposure_timer dolunca `yellow_lemon`'a dönüşür (fV=15). lemon tüketim event'i ekran shader'ına kısa süreli `wave_distortion` ekler.",
+        "BaseCost": 400,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Self Hanging Trees",
+      "dataType": "Normal",
+      "parent": "Coconut Tree",
+      "position": {
+        "x": -1289.7208595003247,
+        "y": 20.000000000000043
+      },
+      "fields": {
+        "Description": "ağaçlar kendi kendine sallanır ve hasar yerler (passive production)",
+        "Implementation": "Tüm ağaç entity'lerine `passive_damage_tick`: belirli aralıklarla otomatik HP azalır (cursor click olmadan). Drop event'i normal şekilde tetiklenir.",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Bigger Island",
+      "dataType": "Multiple Upgrades",
+      "parent": "Banana Tree",
+      "position": {
+        "x": -239.99999999999997,
+        "y": -329.7158470689014
+      },
+      "fields": {
+        "Description": "adanın etrafındaki rastgele bir kareye kum karesi ekler",
+        "Implementation": "Mevcut tile sınırına bitişik rastgele bir konuma yeni `sand` tile ekle (per-level +1). Soil/flower tile'ları denize sınır olamaz, kum bariyer kuralı korunur.",
+        "BaseCost": 8,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Filling Fruits",
+      "dataType": "Multiple Upgrades",
+      "parent": "Coconut Tree",
+      "position": {
+        "x": -940.0050137393258,
+        "y": 370.28134524921416
+      },
+      "fields": {
+        "Description": "meyvelerin verdiği food value 1 artar",
+        "Implementation": "Tüm ağaç-kaynaklı meyve item'larının (green_banana, yellow_banana, half_coconut, green_lemon, yellow_lemon, cacao_bean) fV değerine per-level +1.",
+        "BaseCost": 50,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sugarcane",
+      "dataType": "Normal",
+      "parent": "Campfire",
+      "position": {
+        "x": 459.41967476324714,
+        "y": 17.100904020610862
+      },
+      "fields": {
+        "Description": "adanın kum olan bölgelerinde ve deniz kıyılarında yetişir, yavaş büyür. uygun rastgele bir kareye şeker kamışı koyarsın.",
+        "Implementation": "Uygun rastgele bir kum tile'ına (deniz kıyısına yakın) `sugarcane` entity spawn et. growth_timer ile yavaş büyür; olgunlaşınca cursor click ile harvest → `sugarcane` item drop (fV=4).",
+        "BaseCost": 80,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl",
+      "dataType": "Normal",
+      "parent": "Oyster",
+      "position": {
+        "x": 459.4316915219987,
+        "y": -329.7158457609747
+      },
+      "fields": {
+        "Description": "istiridye kırıldığında içinden artık inci çıkabilir",
+        "Implementation": "oyster.break event'ine `pearl_drop_chance` ekle (~%0.1 default). Roll başarılıysa drop'a `pearl` item eklenir (meta-currency, run sonunda Pearl envanterine eklenir).",
+        "BaseCost": 500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Dryer",
+      "dataType": "Normal",
+      "parent": "Sugarcane",
+      "position": {
+        "x": 809.1355205242437,
+        "y": 17.100904020610862
+      },
+      "fields": {
+        "Description": "içine konulan eşyaları çok hızlı kurutur",
+        "Implementation": "Yerleştirilebilir `dryer` structure aç. İçine konulan item'lar Sundrying timer'ından çok daha hızlı kurur (multiplier, kalibre).",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Cacao Tree",
+      "dataType": "Normal",
+      "parent": "Lemon Tree",
+      "position": {
+        "x": -1989.152551022323,
+        "y": 19.9999999999999
+      },
+      "fields": {
+        "Description": "adanın rastgele bir karesine kakao ağacı koyarsın.",
+        "Implementation": "Uygun rastgele tile'a `cacao_tree` entity spawn et. Drop'u `cacao_bean` (fV=45).",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Dock",
+      "dataType": "Normal",
+      "parent": "Fishes",
+      "position": {
+        "x": 109.72274679459264,
+        "y": 369.71584575621773
+      },
+      "fields": {
+        "Description": "balıklar iskelenin etrafında daha yavaş hareket eder; ayrıca etrafta dolaşan balıklar iskelenin yakınına yönelmeye daha yatkındır.",
+        "Implementation": "Yerleştirilebilir `dock` structure aç. Radius içindeki balık entity'lerinin movement_speed × 0.7-0.8 (kalibre) + attraction_weight artar.",
+        "BaseCost": 300,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Rare Fish Spawn",
+      "dataType": "Normal",
+      "parent": "Fishes",
+      "position": {
+        "x": -239.99999999999994,
+        "y": 719.4385925508103
+      },
+      "fields": {
+        "Description": "nadir (rare) balıkların denizde spawn olabilmesini açar",
+        "Implementation": "fish_spawn_weights[rare] = 0 → başlangıç değeri (kalibre).",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Epic Fish Spawn",
+      "dataType": "Normal",
+      "parent": "Rare Fish Spawn",
+      "position": {
+        "x": 7.688421667484305,
+        "y": 967.1270142182948
+      },
+      "fields": {
+        "Description": "destansı (epic) balıkların denizde spawn olabilmesini açar",
+        "Implementation": "fish_spawn_weights[epic] = 0 → başlangıç değeri (kalibre).",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Legendary Fish Spawn",
+      "dataType": "Normal",
+      "parent": "Epic Fish Spawn",
+      "position": {
+        "x": 255.37473621635033,
+        "y": 1214.8133287671587
+      },
+      "fields": {
+        "Description": "efsanevi (legendary) balıkların denizde spawn olabilmesini açar",
+        "Implementation": "fish_spawn_weights[legendary] = 0 → başlangıç değeri (kalibre).",
+        "BaseCost": 8000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Lemonade",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Barista",
+      "position": {
+        "x": -1783.9679797974422,
+        "y": -969.4751038796662
+      },
+      "fields": {
+        "GEREKLİLİK": "Sugar",
+        "Description": "limon ve şekeri üst üste bir süre bekletmek onları limonataya çevirir",
+        "Implementation": "`yellow_lemon` + `sugar` üst üste drag-merge ile bekletmek `lemonade` recipe'ini tetikler (Shaker zorunlu değil — yere bırakma yeterli). Çıktı item fV ~70 (kalibre).",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Chocolate",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Barista",
+      "position": {
+        "x": -2031.2544258133103,
+        "y": -1071.9045020994604
+      },
+      "fields": {
+        "GEREKLİLİK": "Cacao Tree",
+        "Description": "hindistan cevizi sütü + 4 kakao + şeker",
+        "Implementation": "Shaker'a `coconut_milk` + 4× `cacao_bean` + `sugar` koymak `coconut_milk_choco` recipe'ini tetikler. Çıktı item fV ~117 (kalibre).",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Rare Fish Spawn Rate",
+      "dataType": "Multiple Upgrades",
+      "parent": "Rare Fish Spawn",
+      "position": {
+        "x": 109.72274679459267,
+        "y": 719.4385925508103
+      },
+      "fields": {
+        "Description": "nadir balıkların ortaya çıkma şansını arttırır",
+        "Implementation": "fish_spawn_weights[rare] per-level additive.",
+        "BaseCost": 400,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Fishes",
+      "dataType": "Normal",
+      "parent": "Banana Tree",
+      "position": {
+        "x": -239.99999999999997,
+        "y": 369.71584575621773
+      },
+      "fields": {
+        "Description": "sıradan (common) balıkların denizde spawn olabilmesini açar",
+        "Implementation": "fish_spawn_weights[common] = 0 → başlangıç değeri (kalibre). Su tile'larında common rarity balık entity'lerinin (8 davranış tipi rastgele) spawn'ı açılır.",
+        "BaseCost": 30,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Fish Spawn Rate",
+      "dataType": "Multiple Upgrades",
+      "parent": "I Hate All Commons",
+      "position": {
+        "x": 954.4104458742497,
+        "y": 719.0436037955882
+      },
+      "fields": {
+        "Description": "balık spawn oranını arttırır.",
+        "Implementation": "Toplam balık spawn rate (tüm rarity'lere global multiplier) per-level artar.",
+        "BaseCost": 6000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Fish Exp Rate",
+      "dataType": "Multiple Upgrades",
+      "parent": "Rare Fish Spawn",
+      "position": {
+        "x": -239.99999999999991,
+        "y": 1069.1613393454027
+      },
+      "fields": {
+        "Description": "balıkların verdiği food value miktarını arttırır",
+        "Implementation": "Tüm balık item'larının (raw + cooked, tüm rarity) tüketim fV multiplier'ı per-level artar.",
+        "BaseCost": 400,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Cursor Drag Power",
+      "dataType": "Multiple Upgrades",
+      "parent": "Cursor Power",
+      "position": {
+        "x": 254.97276057485712,
+        "y": -824.6886076437581
+      },
+      "fields": {
+        "Description": "click'lerin bir şeyleri drag etme gücünü arttırır",
+        "Implementation": "cursor.drag_strength per-level artar (drag edilebilir item ağırlık limiti / drag hızı yükselir).",
+        "BaseCost": 30,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Coconut Milk",
+      "dataType": "Normal",
+      "parent": "Coconut Tree",
+      "position": {
+        "x": -1186.9636878662252,
+        "y": -227.6137840464757
+      },
+      "fields": {
+        "Description": "hindistan cevizlerini sallamak yere süt bırakmalarına ve kendilerinin kabuğa dönüşmesine sebep olur. kabuklar bir işe yaramaz.",
+        "Implementation": "`coconut` item'ına drag-shake interaction: cursor sallama threshold'u dolunca `coconut_milk` item drop'u + coconut → `coconut_shell`'e dönüşür. coconut_shell default'ta inert.",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Fishnet",
+      "dataType": "Multiple Upgrades",
+      "parent": "Fish Exp Rate",
+      "position": {
+        "x": -239.99999999999991,
+        "y": 1419.4566835318938
+      },
+      "fields": {
+        "Description": "üzerinden geçen common ve rare balıkları yakalayan ve sabit tutan tuzaklardır. yükseltildikçe haritanın rastgele bir yerinde yeni fishnet belirir. fishnetlerin üzerine kum genişletmesi alınırsa fishnet rastgele başka bir yere taşınır. ayrıca her fishnet tek bir balığı yakalayabilir; ardından doyuma ulaşır ve üzerindeki balık toplanana kadar başka bir balık bu fishnete yakalanmaz.",
+        "Implementation": "Yerleştirilebilir `fishnet` structure: balık entity üzerinden geçince yakalar (capacity=1 default; dolunca yeni yakalama disable). Per-level: rastgele bir su tile'ına yeni fishnet spawn'ı. Yakalanmış balık cursor'la toplanır → fishnet tekrar aktive. Bigger Island ile fishnet'in üzerine kum eklenirse fishnet rastgele başka su tile'ına taşınır. catchable_rarities default: [common, rare].",
+        "BaseCost": 200,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Magnet Island",
+      "dataType": "Normal",
+      "parent": "Item Storage",
+      "position": {
+        "x": -487.68342103694096,
+        "y": -1277.3923670722484
+      },
+      "fields": {
+        "Description": "etrafta denizde yüzen kaynaklar, kıyıya vuracak şekilde ada tarafından çekilir.",
+        "Implementation": "Su tile'larındaki floating resource entity'lerine ada-merkezli attraction force ekle. Kıyıya çarpınca tile'a düşer ve toplanabilir hale gelir.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Sundrying",
+      "dataType": "Normal",
+      "parent": "Sensitive Trees",
+      "position": {
+        "x": -589.7227467945926,
+        "y": 369.71865475078596
+      },
+      "fields": {
+        "Description": "dışarıda bırakılan ve güneşte kuruma-olgunlaşma özelliği olan besinler bir süre durduktan sonra kurur/olgunlaşır ve daha doyurucu hale gelir.",
+        "Implementation": "İlgili item'lar (green_banana → yellow_banana, raw_meat → dried_meat, vs.) tile'da güneş altında bekledikçe `sun_exposure_timer` dolar; threshold'da dönüşür. fV ürün-specific artar.",
+        "BaseCost": 100,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Sugar",
+      "dataType": "Normal",
+      "parent": "Sugarcane",
+      "position": {
+        "x": 705.9206769455968,
+        "y": 265.1703070098316
+      },
+      "fields": {
+        "Description": "şeker kamışlarını campfire'da ısıtırsan şekere dönüşür",
+        "Implementation": "campfire'a (veya cane_heater) `sugarcane` item koymak processing → `sugar` item (fV=20).",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Increase Milk Efficiency",
+      "dataType": "Normal",
+      "parent": "Coconut Milk",
+      "position": {
+        "x": -1536.6795519959915,
+        "y": -227.61378404647576
+      },
+      "fields": {
+        "Description": "süt daha doyurucu bir besin haline gelir",
+        "Implementation": "`coconut_milk` item fV değerine multiplier (kalibre).",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Bunches of Bananas",
+      "dataType": "Normal",
+      "parent": "Sensitive Trees",
+      "position": {
+        "x": -837.0140725882351,
+        "y": -227.29132579364207
+      },
+      "fields": {
+        "Description": "muz ağaçları daha dayanıklıdır ama muzlar salkım olarak düşer",
+        "Implementation": "banana_tree HP'si artar. Drop output'u `green_banana` yerine `banana_bunch` (3 muz içerir); salkıma cursor click ile bir muz koparılıp tüketilir, salkım boşalınca despawn.",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Larger Fish Nets",
+      "dataType": "Multiple Upgrades",
+      "parent": "Fishnet",
+      "position": {
+        "x": -590.2843251649421,
+        "y": 1419.4566835318938
+      },
+      "fields": {
+        "Description": "fishnetler fazladan +1 (per level) balık daha tutabilir",
+        "Implementation": "fishnet.capacity per-level +1.",
+        "BaseCost": 800,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sundry Speed",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sundrying",
+      "position": {
+        "x": -589.7227467945926,
+        "y": 719.4373095015718
+      },
+      "fields": {
+        "Description": "besinler güneşte daha hızlı kurur",
+        "Implementation": "sun_exposure_threshold per-level azalt (multiplier).",
+        "BaseCost": 50,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Careful Coconut Shredding",
+      "dataType": "Normal",
+      "parent": "Self Hanging Trees",
+      "position": {
+        "x": -1537.0073055157486,
+        "y": 267.28644601542317
+      },
+      "fields": {
+        "Description": "bazı hindistan cevizleri kırıldıklarında 2 değil 3 parçaya ayrılır",
+        "Implementation": "coconut parçalanma event'inde `triple_split_chance` ekle (kalibre). Roll başarılıysa 2 yerine 3 `half_coconut` drop'u.",
+        "BaseCost": 800,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Insanely Productive Trees",
+      "dataType": "Normal",
+      "parent": "Filling Fruits",
+      "position": {
+        "x": -940.0050137393258,
+        "y": 720.0000000000009
+      },
+      "fields": {
+        "Description": "bütün ağaçlar daha dayanıklı hale gelir ama 2 kat fazla meyve verirler",
+        "Implementation": "Tüm ağaç entity'lerinin HP'sini arttır + drop event'inde drop_quantity 2x.",
+        "BaseCost": 3000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Bonus Exp for Sugar",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sugar",
+      "position": {
+        "x": 1055.636522706596,
+        "y": 265.1703070098316
+      },
+      "fields": {
+        "Description": "şeker yemek daha fazla food value verir (+%20 per level)",
+        "Implementation": "sugar item tüketim fV'sine per-level +20%.",
+        "BaseCost": 600,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sugar Cane Harvest Efficiency",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sugarcane",
+      "position": {
+        "x": 459.41967476324714,
+        "y": 366.81674978160737
+      },
+      "fields": {
+        "Description": "şeker kamışlarını toplarken küçük bir ihtimalle 2'şer tane toplayabilirsin.",
+        "Implementation": "sugarcane harvest event'ine `double_harvest_chance` per-level additive. Roll başarılıysa drop_quantity 2x.",
+        "BaseCost": 100,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Much Energy Boost When Sugar Eaten",
+      "dataType": "Normal",
+      "parent": "Sugar Energy Boost",
+      "position": {
+        "x": 1303.8863518184883,
+        "y": 512.858728677316
+      },
+      "fields": {
+        "Description": "şeker tüketim bonus etkisini 2'ye katlar",
+        "Implementation": "Sugar Energy Boost buff'ının passive_production_multiplier'ı 2× büyütülür.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Sugar Efficiency",
+      "dataType": "Multiple Upgrades",
+      "parent": "Bonus Exp for Sugar",
+      "position": {
+        "x": 1405.9137759120035,
+        "y": 265.1703070098316
+      },
+      "fields": {
+        "Description": "şeker kamışlarından üretilen şeker bazen 2 kat fazla ortaya çıkabilir",
+        "Implementation": "sugarcane → sugar processing'e `double_sugar_chance` per-level additive. Roll başarılıysa sugar drop_quantity 2x.",
+        "BaseCost": 250,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Better Blood Sugar Control",
+      "dataType": "Multiple Upgrades",
+      "parent": "Much Energy Boost When Sugar Eaten",
+      "position": {
+        "x": 1653.6021975794877,
+        "y": 512.858728677316
+      },
+      "fields": {
+        "Description": "etkiden sonra production sadece %75 yavaşlar (-%25 per level)",
+        "Implementation": "Sugar Energy Boost debuff'ında passive_production_multiplier 0 yerine per-level +0.25 (level 1: 0.25 = %75 yavaş, level 4: 1.0 = debuff yok).",
+        "BaseCost": 3000,
+        "MaxLevel": 4,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Caramel Candies",
+      "dataType": "Normal",
+      "parent": "Sugar Efficiency",
+      "position": {
+        "x": 1653.5971969489444,
+        "y": 17.48688597289059
+      },
+      "fields": {
+        "Description": "en az 9 tane şekeri ısıtmak karamel şekeri çıkartmanı sağlar (her 9 şeker 1 karamel şekeri)",
+        "Implementation": "campfire/heater'a 9× `sugar` koymak `caramel` recipe'ini tetikler → 1× `caramel` item (fV kalibre, sugar × 9'dan yüksek olmalı).",
+        "BaseCost": 6000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Total Fish Spawn Rate",
+      "dataType": "Normal",
+      "parent": "Fishnet",
+      "position": {
+        "x": -487.688421667484,
+        "y": 1667.1451051993781
+      },
+      "fields": {
+        "Description": "denizde balık spawn olma şansını arttırır",
+        "Implementation": "Toplam balık spawn rate global multiplier flat artar (tüm rarity, tek tier).",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Auto Fish Eater",
+      "dataType": "Normal",
+      "parent": "Larger Fish Nets",
+      "position": {
+        "x": -940.5656704141562,
+        "y": 1419.4566835318938
+      },
+      "fields": {
+        "Description": "fishnet'lerde 3 saniyeden fazla kalmış balıklar hemen mideye indirilir",
+        "Implementation": "fishnet'te yakalanmış balıkların time_in_net sayacı 3sn'yi geçince CurrencyManager.add(fV) ile auto-tüketilir, slot boşaltılır.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Productive Banana Trees",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sensitive Trees",
+      "position": {
+        "x": -589.7227467945926,
+        "y": -330.27725320540736
+      },
+      "fields": {
+        "Description": "muz ağaçları küçük bir ihtimalle 2 kat muz düşürebilir",
+        "Implementation": "banana_tree drop event'ine `double_drop_chance` (per-level additive). Her drop'ta roll edilir; başarılıysa drop miktarı 2x.",
+        "BaseCost": 15,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Item Stacking",
+      "dataType": "Multiple Upgrades",
+      "parent": "Bigger Island",
+      "position": {
+        "x": -487.683421036941,
+        "y": -577.3992681058422
+      },
+      "fields": {
+        "Description": "aynı tip eşyaları üst üste istifleyebilirsin (+1) (maks 9)",
+        "Implementation": "Tile'da aynı tip item üst üste istiflenir; stack cap default 1'den per-level +1, max 9.",
+        "BaseCost": 15,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Shred Chance",
+      "dataType": "Multiple Upgrades",
+      "parent": "Careful Coconut Shredding",
+      "position": {
+        "x": -1784.293752447534,
+        "y": 514.5728929472076
+      },
+      "fields": {
+        "Description": "hindistan cevizlerinin 2'den fazla parçaya ayrılma şansını arttırır",
+        "Implementation": "`triple_split_chance` per-level additive.",
+        "BaseCost": 1500,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Perfect Shredding",
+      "dataType": "Multiple Upgrades",
+      "parent": "Careful Coconut Shredding",
+      "position": {
+        "x": -1537.0073055157486,
+        "y": 617.0009483269869
+      },
+      "fields": {
+        "Description": "hindistan cevizleri parçalandığında 4 parçaya ayrılma şansına sahiptir",
+        "Implementation": "coconut parçalanma event'ine `quad_split_chance` (per-level additive). Roll önceliği: önce quad, sonra triple.",
+        "BaseCost": 4000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Golden Milk",
+      "dataType": "Normal",
+      "parent": "Coconut Milk",
+      "position": {
+        "x": -1186.9636878662252,
+        "y": -577.3296298074754
+      },
+      "fields": {
+        "Description": "bazı sütler altın süt olarak oluşur",
+        "Implementation": "coconut_milk üretim event'lerine (Shaker auto-shake, manuel drag-shake) `golden_milk_chance` ekle (düşük, kalibre). Roll başarılıysa çıktı `coconut_milk` yerine `golden_milk` (fV = coconut_milk × 10).",
+        "BaseCost": 1200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Golden Milk Efficiency",
+      "dataType": "Normal",
+      "parent": "Golden Milk",
+      "position": {
+        "x": -1186.9636878662252,
+        "y": -927.0454740431393
+      },
+      "fields": {
+        "Description": "altın süt daha doyurucudur",
+        "Implementation": "`golden_milk` fV multiplier (kalibre).",
+        "BaseCost": 2500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Golden Milk Chance",
+      "dataType": "Multiple Upgrades",
+      "parent": "Golden Milk Efficiency",
+      "position": {
+        "x": -1186.9636878662252,
+        "y": -1276.764128793925
+      },
+      "fields": {
+        "Description": "altın süt oluşma şansını arttırır",
+        "Implementation": "`golden_milk_chance` per-level additive.",
+        "BaseCost": 1200,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Shaker",
+      "dataType": "Normal",
+      "parent": "Increase Milk Efficiency",
+      "position": {
+        "x": -1783.9659935315917,
+        "y": -474.9002255820785
+      },
+      "fields": {
+        "Description": "bir hindistan cevizi parçasını içine koyduğunda bir süre sonra dışarıya otomatik olarak süt bırakır",
+        "Implementation": "Yerleştirilebilir `shaker` structure aç. İçine `coconut`/`half_coconut` koyunca auto-shake timer başlar; dolunca dış tile'a `coconut_milk` drop + içerik shell'e dönüşür. Default kapasite 1.",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Golden Bananas",
+      "dataType": "Normal",
+      "parent": "Tons of Bananas",
+      "position": {
+        "x": -837.0140725882351,
+        "y": -926.7230173038661
+      },
+      "fields": {
+        "Description": "muz salkımlarının bazıları altın olarak ortaya çıkma şansına sahiptir. (altın muzlar 10 kat daha fazla food value verir.)",
+        "Implementation": "banana_tree drop'larına `golden_bunch_chance` (düşük, kalibre). Roll başarılıysa drop'lanan salkım içeriği `golden_banana` ile dolar (fV = green_banana × 10).",
+        "BaseCost": 1200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Tons of Bananas",
+      "dataType": "Normal",
+      "parent": "Bunches of Bananas",
+      "position": {
+        "x": -837.0140725882351,
+        "y": -577.007171554642
+      },
+      "fields": {
+        "Description": "muz salkımlarındaki muz sayısı 3'ten 4'e çıkar",
+        "Implementation": "banana_bunch içerik miktarı 3 → 4.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Banana Addiction",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Lucky Monkey",
+      "position": {
+        "x": -1084.3005186064547,
+        "y": -1523.7281180728712
+      },
+      "fields": {
+        "GEREKLİLİK": "\"Golden Banana Shake\" alınmış olmamalı",
+        "Description": "düşen muzlar hemen mideye indirilir",
+        "Implementation": "Tüm muz drop'ları (green_banana / yellow_banana / golden_banana ve banana_bunch içeriği) tile'a düşmek yerine doğrudan CurrencyManager.add(fV) ile tüketilir; drag/click adımı atlanır.",
+        "BaseCost": 5000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Lucky Monkey",
+      "dataType": "Multiple Upgrades",
+      "parent": "Golden Bananas",
+      "position": {
+        "x": -837.0140725882351,
+        "y": -1276.4416720546517
+      },
+      "fields": {
+        "Description": "altın muz salkımlarının ortaya çıkma şansı artar",
+        "Implementation": "`golden_bunch_chance` per-level additive.",
+        "BaseCost": 600,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Addicted to Gold",
+      "dataType": "Normal",
+      "parent": "Cacao Tree",
+      "position": {
+        "x": -2339.42980422773,
+        "y": 19.999999999999943
+      },
+      "fields": {
+        "Description": "altın tüketmek ekranı biraz sarartır ve 0,5 saniye boyunca nadir şeylerin etkilerini 2'ye katlar; etki bittikten sonraki 0,5 saniye süre boyunca nadir şeyler etki yaratmaz. (altın buff'ları birikebilir ama sonrasında gelen debuff'lar birikmez ve sadece en sondaki buff'ın debuff'ı uygulanır.)",
+        "Implementation": "Altın item tüketim event'inde (golden_banana / golden_milk / golden_meat / golden_X) 0.5sn ekrana sarı tint shader + `rare_effect_multiplier × 2` buff. Sonra 0.5sn `rare_effect_multiplier = 0` debuff. Buff'lar birikir (süre toplanır); debuff sadece son buff'ın bitiminden sonra uygulanır.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Much Gold, Much Strong",
+      "dataType": "Normal",
+      "parent": "Addicted to Gold",
+      "position": {
+        "x": -2689.144640262608,
+        "y": 19.999999999999908
+      },
+      "fields": {
+        "Description": "nadir yiyeceklerin etkisi 5 kat daha fazla olur",
+        "Implementation": "Addicted to Gold rare_effect_multiplier 2× → 10× (5× scaling).",
+        "BaseCost": 10000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Longer Gold Boost",
+      "dataType": "Multiple Upgrades",
+      "parent": "Addicted to Gold",
+      "position": {
+        "x": -2586.721130021372,
+        "y": -227.29132579364267
+      },
+      "fields": {
+        "Description": "altın tüketmenin getirdiği buff süresi 0,5 sn uzar",
+        "Implementation": "Addicted to Gold buff_duration per-level +0.5sn.",
+        "BaseCost": 4000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Addicted to Cacao",
+      "dataType": "Normal",
+      "parent": "Cacao Tree",
+      "position": {
+        "x": -2236.8415658111016,
+        "y": -227.68901478877962
+      },
+      "fields": {
+        "Description": "kakao tüketmek 1 saniye boyunca click'lerin 2 kat daha güçlü olmasına sebep olur. bu etki bittiğinde, etki süresi kadar süre boyunca click gücü yarıya iner. (buff altındayken yine buff almak buff süresini uzatır, debuff süresi de buna paralel olarak artar.)",
+        "Implementation": "cacao_bean tüketim event'inde 1sn `cursor.click_power × 2` buff. Buff bitiminde 1sn × 0.5 debuff. Buff altında tekrar tüketim → buff süresi +1sn (debuff süresi paralel artar).",
+        "BaseCost": 3000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Much Cacao",
+      "dataType": "Normal",
+      "parent": "Addicted to Cacao",
+      "position": {
+        "x": -1989.5502400174603,
+        "y": -474.9803405824223
+      },
+      "fields": {
+        "Description": "kakao 4 kat daha güçlü etki eder",
+        "Implementation": "Addicted to Cacao buff'ının click_power multiplier'ı 4× büyür (2× → 8×).",
+        "BaseCost": 8000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Stronger Cacao",
+      "dataType": "Multiple Upgrades",
+      "parent": "Addicted to Cacao",
+      "position": {
+        "x": -2236.8415658111016,
+        "y": -577.9733399537215
+      },
+      "fields": {
+        "Description": "kakao tüketmenin getirdiği buff süresi uzar (+0,5 sn)",
+        "Implementation": "Addicted to Cacao buff_duration per-level +0.5sn (debuff_duration paralel artar).",
+        "BaseCost": 4000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sundry Cooking",
+      "dataType": "Normal",
+      "parent": "Sundry Speed",
+      "position": {
+        "x": -837.4117615833716,
+        "y": 967.1263242903508
+      },
+      "fields": {
+        "Description": "pişirilebilir besinler güneşin altında otomatik pişer",
+        "Implementation": "Pişirilebilir item'lar (raw_fish, sugarcane) güneş altında sun_exposure_timer dolduğunda Campfire'a koyma adımı atlanır → direkt pişmiş versiyona dönüşür.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Hotter Sun",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sundry Speed",
+      "position": {
+        "x": -589.7227467945926,
+        "y": 1069.1600562961642
+      },
+      "fields": {
+        "Description": "güneş hem daha hızlı kurutur hem de daha hızlı pişirir",
+        "Implementation": "Hem sundrying hem sun-cooking timer threshold'unu per-level azalt.",
+        "BaseCost": 200,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Eat Everything",
+      "dataType": "Normal",
+      "parent": "Self Hanging Trees",
+      "position": {
+        "x": -1289.7208595003247,
+        "y": 369.72274679459264
+      },
+      "fields": {
+        "Description": "bir besini çiğ ya da kabuklu yiyebilmeni sağlar",
+        "Implementation": "Default'ta tüketilemeyen item'lar (raw_fish, raw_meat, coconut_shell, çiğ kabuk içerikleri) tüketilebilir hale gelir (fV düşük, kalibre).",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Selective Eater",
+      "dataType": "Normal",
+      "parent": "Much Hot Heaters",
+      "position": {
+        "x": 1056.421966550235,
+        "y": -579.9013890252886
+      },
+      "fields": {
+        "Description": "işlenmiş ürünleri yerken 2 kat daha fazla food value kazanırsın",
+        "Implementation": "İşlenmiş item'ların (cooked_X, dried_X, recipe çıktıları) tüketim fV × 2.",
+        "BaseCost": 2000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Huge Shaker",
+      "dataType": "Multiple Upgrades",
+      "parent": "Shaker",
+      "position": {
+        "x": -1536.6795311918215,
+        "y": -722.1866879218508
+      },
+      "fields": {
+        "Description": "Shaker'ın içine aynı anda fazladan 1 hindistan cevizi daha koyabilirsin",
+        "Implementation": "shaker.capacity per-level +1 (default 1).",
+        "BaseCost": 1500,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Gourmet Eater",
+      "dataType": "Normal",
+      "parent": "Selective Eater",
+      "position": {
+        "x": 808.7385455132942,
+        "y": -827.5848100622295
+      },
+      "fields": {
+        "Description": "işlenmiş ürünleri yerken 4 kat daha fazla food value kazanırsın. (Selective Eater ile birleşmez, yani bu progression sadece x2 daha sağlamış olur.)",
+        "Implementation": "İşlenmiş item tüketim fV × 4 (replace, Selective Eater ile non-stacking — toplam etki x4, x2x2 değil).",
+        "BaseCost": 6000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "I Hate Common Fish",
+      "dataType": "Multiple Upgrades",
+      "parent": "Rare Fish Spawn Rate",
+      "position": {
+        "x": 357.0111790763097,
+        "y": 966.7270248325291
+      },
+      "fields": {
+        "Description": "common balıkların ortaya çıkma şansını azaltır",
+        "Implementation": "fish_spawn_weights[common] per-level decrement (kalibre, alt sınır 0).",
+        "BaseCost": 1000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "I Hate All Commons",
+      "dataType": "Multiple Upgrades",
+      "parent": "I Hate Common Fish",
+      "position": {
+        "x": 706.7270248373088,
+        "y": 966.7270248325291
+      },
+      "fields": {
+        "Description": "bütün nadir lootların çıkma şansını arttırır (altın meyveler, süt ve balıklar (common haricindekiler))",
+        "Implementation": "Tüm nadir loot drop_chance'lerini per-level arttır: golden_bunch_chance, golden_milk_chance, fish_spawn_weights[rare/epic/legendary]. Common etkilenmez.",
+        "BaseCost": 3000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Oyster Spawner",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Dock",
+      "position": {
+        "x": 357.0140725882349,
+        "y": 617.0071715498601
+      },
+      "fields": {
+        "GEREKLİLİK": "Oyster",
+        "Description": "iskelenin etrafında istiridye spawn olma şansı artar",
+        "Implementation": "dock radius'unda oyster_spawn_chance flat increment (deniz dibinde).",
+        "BaseCost": 1000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Interesting Docks",
+      "dataType": "Multiple Upgrades",
+      "parent": "Oyster Spawner",
+      "position": {
+        "x": 604.3053983818772,
+        "y": 864.2984973435025
+      },
+      "fields": {
+        "Description": "balıklar artık iskelenin yanında daha uzun süre vakit geçirir ve daha fazla çaptaki balıklar bundan etkilenir",
+        "Implementation": "dock attraction radius per-level büyür + attracted balık entity'lerinin lingering_time'ı artar.",
+        "BaseCost": 2000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Pearl Hunter 6",
+      "dataType": "PEARL",
+      "parent": "Much Hot Heaters",
+      "position": {
+        "x": 1304.1109813390142,
+        "y": -477.8745567941597
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 2500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 4",
+      "dataType": "PEARL",
+      "parent": "Bonus Exp for Sugar",
+      "position": {
+        "x": 1055.636522706596,
+        "y": -84.54419530173209
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 900,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 2",
+      "dataType": "PEARL",
+      "parent": "Hotter Sun",
+      "position": {
+        "x": -841.8595161756774,
+        "y": 1311.5100854700704
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 400,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 9",
+      "dataType": "PEARL",
+      "parent": "Lemonade",
+      "position": {
+        "x": -1540,
+        "y": -1220
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 9000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 10",
+      "dataType": "PEARL",
+      "parent": "Huge Shaker",
+      "position": {
+        "x": -1536.6795311918215,
+        "y": -1071.9023627569086
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 13000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 8",
+      "dataType": "PEARL",
+      "parent": "Lucky Monkey",
+      "position": {
+        "x": -837.0140725882351,
+        "y": -1626.1575178273167
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 6000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 7",
+      "dataType": "PEARL",
+      "parent": "Cursor Damage",
+      "position": {
+        "x": 254.57289205198128,
+        "y": -1174.5840833073769
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 3",
+      "dataType": "PEARL",
+      "parent": "I Hate All Commons",
+      "position": {
+        "x": 954.413339386175,
+        "y": 1214.4133393813938
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Oyster",
+      "dataType": "Normal",
+      "parent": "Campfire",
+      "position": {
+        "x": 109.71584576099934,
+        "y": -329.7158457609747
+      },
+      "fields": {
+        "Description": "suyun dibinde bazen istiridye belirebilir; bu istiridye drag edilerek karaya çıkarılıp click ile kırılabilir. kırıldığında içinden midye eti çıkar.",
+        "Implementation": "Su tile'larında `oyster` entity spawn'ı açılır (oyster_spawn_chance = 0 → başlangıç değeri, kalibre). Cursor drag ile karaya taşınır; kara tile'da cursor click → HP düşer, HP=0'da `oyster_meat` drop (fV=5).",
+        "BaseCost": 80,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Delicious Oyster Meat",
+      "dataType": "Multiple Upgrades",
+      "parent": "Oyster",
+      "position": {
+        "x": 357.00229178699,
+        "y": -577.0022917869668
+      },
+      "fields": {
+        "Description": "çiğ ve pişmiş midye eti %25 fazladan doyurur",
+        "Implementation": "oyster_meat ve cooked_oyster_meat fV'sine per-level +25%.",
+        "BaseCost": 200,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sensitive Oysters",
+      "dataType": "Normal",
+      "parent": "Delicious Oyster Meat",
+      "position": {
+        "x": 604.6886063358555,
+        "y": -824.6886063358323
+      },
+      "fields": {
+        "Description": "istiridyeleri kırmak daha kolaydır",
+        "Implementation": "oyster.HP azaltılır (daha az click ile kırılır).",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Much Hot Heaters",
+      "dataType": "Normal",
+      "parent": "Dryer",
+      "position": {
+        "x": 1056.421966550235,
+        "y": -230.1855420053804
+      },
+      "fields": {
+        "Description": "kurutucu ve fırın türleri artık daha verimli çalışır",
+        "Implementation": "Tüm heater-tipi structure'ların (campfire, dryer, cane_heater) timer'ları azaltılır (multiplier).",
+        "BaseCost": 800,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Double Oyster Meat",
+      "dataType": "Multiple Upgrades",
+      "parent": "Delicious Oyster Meat",
+      "position": {
+        "x": 707.2866169519322,
+        "y": -577.0022917869668
+      },
+      "fields": {
+        "Description": "istiridyeden çıkan etin 2 kat fazla sayıda çıkma şansı vardır",
+        "Implementation": "oyster.break event'ine `double_meat_chance` per-level additive. Roll başarılıysa oyster_meat drop_quantity 2x.",
+        "BaseCost": 600,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Pearl Hunter 5",
+      "dataType": "PEARL",
+      "parent": "Pearl",
+      "position": {
+        "x": 809.1475372829983,
+        "y": -329.7158457609747
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Lucky Hands",
+      "dataType": "Normal",
+      "parent": "Cursor Damage",
+      "position": {
+        "x": 10.106101026280795,
+        "y": -1277.0021158372217
+      },
+      "fields": {
+        "Description": "istiridyeye özellikle daha fazla hasar verir",
+        "Implementation": "Cursor click damage çarpanı oyster entity'sinde flat arttırılır (oyster-specific multiplier).",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Item Storage",
+      "dataType": "Multiple Upgrades",
+      "parent": "Item Stacking",
+      "position": {
+        "x": -487.68342103694096,
+        "y": -927.1151138668407
+      },
+      "fields": {
+        "Description": "aynı tip eşyaları üst üste istifleyebilirsin (+10) (maks 99)",
+        "Implementation": "Stack cap per-level +10 (Item Stacking'in cap=9 üstüne, max 99).",
+        "BaseCost": 50,
+        "MaxLevel": 9,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Campfire",
+      "dataType": "Normal",
+      "parent": "Banana Tree",
+      "position": {
+        "x": 109.71584576099931,
+        "y": 20
+      },
+      "fields": {
+        "Description": "üzerine konulan besinleri pişirmeye yarar. pişmiş besinler biraz daha fazla food value üretir",
+        "Implementation": "Yerleştirilebilir `campfire` structure aç. İçine konulan pişirilebilir item'lar (raw_fish, sugarcane vs.) cooking_timer dolduktan sonra cooked_X versiyonuna dönüşür (cooked fV = raw × 4-10×).",
+        "BaseCost": 30,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Area Cracker",
+      "dataType": "Multiple Upgrades",
+      "parent": "Cursor Damage",
+      "position": {
+        "x": -239.99999999999727,
+        "y": -1174.5840833073778
+      },
+      "fields": {
+        "Description": "bir nesneye click yapıldığında etrafındaki kırılabilecek belli çaptaki nesnelere de %20 hasar verir",
+        "Implementation": "cursor.click event'ine AOE: ana hedefin etrafındaki radius içindeki kırılabilir entity'lere (oyster, coconut, ağaç vs.) splash damage = cursor.click_power × 0.2 (sabit). AOE radius per-level büyür (base radius kalibre, per-level additive).",
+        "BaseCost": 800,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sugar Energy Boost",
+      "dataType": "Multiple Upgrades",
+      "parent": "Sugar",
+      "position": {
+        "x": 953.6090986130813,
+        "y": 512.858728677316
+      },
+      "fields": {
+        "Description": "şeker yediğinde pasif production ürünlerinin 1 saniyeliğine %20 daha verimli çalışmasını sağlarsın (+%20 per level). sonrasında bu süre kadar pasif production durur.",
+        "Implementation": "sugar tüketim event'inde 1sn süreyle `passive_production_multiplier × 1.2` buff (per-level +20% additive). Buff sonrası 1sn `passive_production_multiplier = 0` debuff. Etkilenen sistemler: passive_damage_tick, structure auto-loops (Shaker, cane_heater), vb.",
+        "BaseCost": 800,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Auto Cane Cutter",
+      "dataType": "Normal",
+      "parent": "Sugar Energy Boost",
+      "position": {
+        "x": 603.8904438622955,
+        "y": 512.858728677316
+      },
+      "fields": {
+        "Description": "uzayan şeker kamışlarını otomatik toplar.",
+        "Implementation": "Olgunlaşmış sugarcane entity'leri otomatik harvest edilir → `sugarcane` item tile'a drop.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Cane Heater",
+      "dataType": "Normal",
+      "parent": "Bonus Exp for Sugar",
+      "position": {
+        "x": 1302.9278485002383,
+        "y": 17.878981216189302
+      },
+      "fields": {
+        "Description": "özel bir ısıtıcı en yakınındaki şeker kamışını alır ve şekere çevirir, şekeri dışarı bırakır ve sonra başka bir tanesini alır.",
+        "Implementation": "Yerleştirilebilir `cane_heater` structure aç. Auto-loop: en yakın `sugarcane` item'ı yutar → processing → `sugar` drop dışarı → bir sonraki sugarcane'a geçer.",
+        "BaseCost": 2500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Soil",
+      "dataType": "Normal",
+      "parent": "Bigger Island",
+      "position": {
+        "x": -239.99999999999994,
+        "y": -679.4385938634939
+      },
+      "fields": {
+        "Description": "bir kum karosunu toprağa çevirir. toprakta ağaçlar daha verimli meyve verir",
+        "Implementation": "Sand tile'ı `soil` tile'a çevirme aksiyonu aç. Soil üzerindeki ağaç entity'lerinin drop_quantity'sine flat +10% multiplier. Soil denize sınır olamaz (kum bariyer).",
+        "BaseCost": 300,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Efficient Soil",
+      "dataType": "Multiple Upgrades",
+      "parent": "Soil",
+      "position": {
+        "x": -239.99999999999994,
+        "y": -1029.1544409073122
+      },
+      "fields": {
+        "Description": "toprağın üzerinde yetişen ağaçlar ve bitkiler %10 daha fazla verim verir (+%10 per level)",
+        "Implementation": "Soil tile yield multiplier'ına per-level +10%.",
+        "BaseCost": 1000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Barista",
+      "dataType": "Normal",
+      "parent": "Shaker",
+      "position": {
+        "x": -2031.2544258133103,
+        "y": -722.1886578637957
+      },
+      "fields": {
+        "Description": "Shaker'a süt ile bir başka uygun besini beraber koymak tarifler üretmenizi sağlar. Shaker'a click yapmak içindeki besini dışarı atar.",
+        "Implementation": "shaker structure'a recipe-resolver davranışı: 2+ uyumlu item içeride → recipe lookup → çıktı drop. Cursor click → mevcut içerik dışarı atılır (recipe iptal).",
+        "BaseCost": 2000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Trees",
+      "dataType": "Normal",
+      "parent": "Insanely Productive Trees",
+      "position": {
+        "x": -1187.6913282881906,
+        "y": 967.6863145488671
+      },
+      "fields": {
+        "Description": "ağaçlar meyve verirken çok ufak da olsa bir ihtimalle inci de düşürebilir",
+        "Implementation": "Tüm ağaç drop event'lerine `pearl_drop_chance` (çok düşük, kalibre). Roll başarılıysa drop'a ek `pearl` item eklenir.",
+        "BaseCost": 5000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Pearl Hunter 1",
+      "dataType": "PEARL",
+      "parent": "Pearl Trees",
+      "position": {
+        "x": -1434.979760569909,
+        "y": 1214.974746830584
+      },
+      "fields": {
+        "Description": "istiridyeyi parçaladığında içinden inci çıkma şansını arttırır",
+        "Implementation": "oyster.break event'inde pearl_drop_chance flat increment.",
+        "BaseCost": 200,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Epic Nets",
+      "dataType": "Normal",
+      "parent": "Epic Fish Spawn",
+      "position": {
+        "x": 7.688421667484305,
+        "y": 1316.8418502531715
+      },
+      "fields": {
+        "Description": "fishnet'ler artık epic balıkları da yakalayabilir",
+        "Implementation": "fishnet.catchable_rarities listesine 'epic' eklenir (default: common, rare).",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Auto Collector",
+      "dataType": "Normal",
+      "parent": "Legendary Fish Spawn",
+      "position": {
+        "x": 255.37473621635044,
+        "y": 1564.5278310787205
+      },
+      "fields": {
+        "Description": "fishnet'ler dolduğunda fishnete en uzun süredir takılı olan balık mideye indirilir",
+        "Implementation": "Fishnet capacity dolduğunda en uzun süredir takılı (FIFO — oldest_caught) balık CurrencyManager.add(fV) ile auto-tüketilir, slot boşaltılır.",
+        "BaseCost": 8000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Golden Meats",
+      "dataType": "Normal",
+      "parent": "Sensitive Oysters",
+      "position": {
+        "x": 604.6886063358555,
+        "y": -1174.4042811708898
+      },
+      "fields": {
+        "Description": "bazı istiridyelerin içinden altın midye eti çıkabilir. bunlar 10 kat daha doyurucudur",
+        "Implementation": "oyster.break event'ine `golden_meat_chance` (düşük, kalibre). Roll başarılıysa oyster_meat yerine `golden_meat` drop (fV = oyster_meat × 10).",
+        "BaseCost": 2500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "More Gold, More Meat",
+      "dataType": "Multiple Upgrades",
+      "parent": "Golden Meats",
+      "position": {
+        "x": 357.39728054221325,
+        "y": -1421.695606964532
+      },
+      "fields": {
+        "Description": "kırılan istiridyeden altın midye eti çıkma şansını arttırır",
+        "Implementation": "`golden_meat_chance` per-level additive.",
+        "BaseCost": 1200,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Better Heater Capacity",
+      "dataType": "Normal",
+      "parent": "Cane Heater",
+      "position": {
+        "x": 1539.8197895184785,
+        "y": -239.3823276696118
+      },
+      "fields": {
+        "Description": "Cane Heater'ın kapasitesi artar ve aynı anda fazladan 1 şeker kamışını içine alıp şekere çevirir.",
+        "Implementation": "cane_heater.capacity 1 → 2 (aynı anda 2 sugarcane process eder).",
+        "BaseCost": 6000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Faster Shaking",
+      "dataType": "Normal",
+      "parent": "Increase Milk Efficiency",
+      "position": {
+        "x": -1886.3842078095004,
+        "y": -227.61378404647579
+      },
+      "fields": {
+        "Description": "daha az sallayarak süt oluşturulabilir",
+        "Implementation": "coconut → coconut_milk drag-shake threshold'unu azalt.",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Epic Fish Spawn Rate",
+      "dataType": "Multiple Upgrades",
+      "parent": "Legendary Fish Spawn",
+      "position": {
+        "x": 605.6560814655651,
+        "y": 1214.8133287671587
+      },
+      "fields": {
+        "Description": "epic balıkların ortaya çıkma şansını arttırır",
+        "Implementation": "fish_spawn_weights[epic] per-level additive.",
+        "BaseCost": 800,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Legendary Fish Spawn Rate",
+      "dataType": "Multiple Upgrades",
+      "parent": "Legendary Fish Spawn",
+      "position": {
+        "x": 502.66606200999416,
+        "y": 1462.104654560799
+      },
+      "fields": {
+        "Description": "legendary balıkların ortaya çıkma şansını arttırır.",
+        "Implementation": "fish_spawn_weights[legendary] per-level additive.",
+        "BaseCost": 3000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Sensitive Trees",
+      "dataType": "Multiple Upgrades",
+      "parent": "Banana Tree",
+      "position": {
+        "x": -589.7227467945926,
+        "y": 20.000000000000043
+      },
+      "fields": {
+        "Description": "ağaçların meyve vermesi için ihtiyaç duydukları hasar miktarı azalır",
+        "Implementation": "Tüm ağaç entity'lerinin (banana_tree, coconut_tree, lemon_tree, cacao_tree) fruit-drop için gereken HP eşiği per-level azalır. Düşük HP = daha az click ile meyve.",
+        "BaseCost": 8,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Fishes Like Shell",
+      "dataType": "Normal",
+      "parent": "Coconut Milk",
+      "position": {
+        "x": -1434.647108903166,
+        "y": -475.2972050834167
+      },
+      "fields": {
+        "Description": "hindistan cevizi kabuğu suya bırakılırsa etrafına balıkların toplanma şansı artar",
+        "Implementation": "`coconut_shell` su tile'larına bırakıldığında yakındaki balık entity'lerinin attraction_weight'i artar (radius kalibre).",
+        "BaseCost": 600,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Efficient Citrus",
+      "dataType": "Normal",
+      "parent": "Lemon Tree",
+      "position": {
+        "x": -1886.728031054966,
+        "y": 267.29132579364216
+      },
+      "fields": {
+        "Description": "limon tüketmek ekranı daha fazla dalgalandırır ama besleyiciliği 2 kat artar",
+        "Implementation": "yellow_lemon tüketim event'inde wave_distortion amplitude arttır + lemon item fV × 2.",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Shaking Lemons",
+      "dataType": "Multiple Upgrades",
+      "parent": "Efficient Citrus",
+      "position": {
+        "x": -2134.411452091907,
+        "y": 514.9747468305832
+      },
+      "fields": {
+        "Description": "limon ağaçlarının pasif sarsılmasını arttırır (+%20 per level)",
+        "Implementation": "lemon_tree.passive_damage_tick rate per-level +20% (Self Hanging Trees ile aktif olan passive damage'a uygulanır).",
+        "BaseCost": 1000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "King of Limes",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Shaking Lemons",
+      "position": {
+        "x": -2134.411452091907,
+        "y": 864.6793167257836
+      },
+      "fields": {
+        "GEREKLİLİK": "\"King of Lemons\" alınmış olmamalı",
+        "Description": "artık yeşil limonlar güneşte olgunlaştırılamaz, yeşil limon tüketmek ekranı çok daha az dalgalandırır, ağaçlardan 2 kat yeşil limon düşer, yeşil limonlar 4 kat fazla doyurur",
+        "Implementation": "green_lemon → yellow_lemon sun_exposure dönüşümü disable. green_lemon tüketiminde wave_distortion amplitude × 0.25. lemon_tree drop_quantity × 2 (sadece green). green_lemon fV × 4.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "King of Lemons",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Shaking Lemons",
+      "position": {
+        "x": -2484.6957772568494,
+        "y": 514.9747468305832
+      },
+      "fields": {
+        "GEREKLİLİK": "\"King of Limes\" alınmış olmamalı",
+        "Description": "limon tüketince ekran daha fazla dalgalanır, limon ağaçları daha dayanıklı hale gelir ama limonlar 5 kat daha fazla doyurur",
+        "Implementation": "yellow_lemon tüketiminde wave_distortion amplitude arttır. lemon_tree HP arttır. lemon item (green + yellow) fV × 5.",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Bean Dices",
+      "dataType": "Normal",
+      "parent": "Cacao Tree",
+      "position": {
+        "x": -2236.4409833040404,
+        "y": 267.2884322817177
+      },
+      "fields": {
+        "Description": "kakao ağacından aynı anda 1 ile 6 arasında rastgele sayıda kakao çekirdeği düşer",
+        "Implementation": "cacao_tree drop event'inde drop_quantity sabit 1 yerine random[1,6].",
+        "BaseCost": 4000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Golden Banana Shake",
+      "dataType": "Ön koşullu olanlar",
+      "parent": "Lucky Monkey",
+      "position": {
+        "x": -589.3306515512941,
+        "y": -1524.1250930915926
+      },
+      "fields": {
+        "GEREKLİLİK": "Barista; \"Banana Addiction\" alınmış olmamalı",
+        "Description": "altın muz ile altın sütün karışımından oluşan oyunun en doyurucu besini.",
+        "Implementation": "Shaker'a `golden_banana` + `golden_milk` koymak `golden_banana_shake` recipe'ini tetikler. Çıktı item fV = oyundaki en yüksek non-balık değer (kalibre).",
+        "BaseCost": 12000,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Nut Lover",
+      "dataType": "Normal",
+      "parent": "Gluttonous",
+      "position": {
+        "x": -1640.006357188761,
+        "y": 720.0079107597143
+      },
+      "fields": {
+        "Description": "artık sade kabuk ve kabuklu besinleri tüketebilirsin",
+        "Implementation": "`coconut_shell` ve diğer kabuk item'ları doğrudan tüketilebilir; fV düşük (kalibre).",
+        "BaseCost": 1500,
+        "MaxLevel": 1,
+        "CostFormula": "—"
+      }
+    },
+    {
+      "title": "Gluttonous",
+      "dataType": "Multiple Upgrades",
+      "parent": "Eat Everything",
+      "position": {
+        "x": -1289.7208595003247,
+        "y": 720.0079107597143
+      },
+      "fields": {
+        "Description": "çiğ-kabuklu-bozuk-çürük-olgunlaşmamış besinleri yemek daha fazla doyurur (+%10 per level)",
+        "Implementation": "Eat Everything tarafından açılan kategori (raw / shell / unripe) tüketim fV'sine per-level +10%.",
+        "BaseCost": 1000,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Flesh Lover",
+      "dataType": "Multiple Upgrades",
+      "parent": "Nut Lover",
+      "position": {
+        "x": -1640.006357188761,
+        "y": 1069.7224130712777
+      },
+      "fields": {
+        "Description": "çiğ etleri tüketmek (mesela balık ve midye) artık (+%10 per level) daha doyurucudur",
+        "Implementation": "Çiğ et item'larının (raw_fish, oyster_meat) tüketim fV'sine per-level +10%.",
+        "BaseCost": 80,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    },
+    {
+      "title": "Green Lover",
+      "dataType": "Multiple Upgrades",
+      "parent": "Gluttonous",
+      "position": {
+        "x": -1537.0071846634232,
+        "y": 967.2942359228136
+      },
+      "fields": {
+        "Description": "olgunlaşmamış meyveleri yemek artık daha doyurucudur (+%10 per level)",
+        "Implementation": "Olgunlaşmamış meyve item'larının (green_banana, green_lemon) tüketim fV'sine per-level +10%.",
+        "BaseCost": 80,
+        "MaxLevel": 8,
+        "CostFormula": "BaseCost × 2^level"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "Bigger Island",
+      "to": "Cursor Power",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cursor Power",
+      "to": "Cursor Damage",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sensitive Trees",
+      "to": "Coconut Tree",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Self Hanging Trees",
+      "to": "Lemon Tree",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Tree",
+      "to": "Self Hanging Trees",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Banana Tree",
+      "to": "Bigger Island",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Tree",
+      "to": "Filling Fruits",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Campfire",
+      "to": "Sugarcane",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Oyster",
+      "to": "Pearl",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugarcane",
+      "to": "Dryer",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lemon Tree",
+      "to": "Cacao Tree",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Fishes",
+      "to": "Dock",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Fishes",
+      "to": "Rare Fish Spawn",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Rare Fish Spawn",
+      "to": "Epic Fish Spawn",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Epic Fish Spawn",
+      "to": "Legendary Fish Spawn",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Barista",
+      "to": "Lemonade",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Barista",
+      "to": "Chocolate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Rare Fish Spawn",
+      "to": "Rare Fish Spawn Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Banana Tree",
+      "to": "Fishes",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "I Hate All Commons",
+      "to": "Fish Spawn Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Rare Fish Spawn",
+      "to": "Fish Exp Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cursor Power",
+      "to": "Cursor Drag Power",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Tree",
+      "to": "Coconut Milk",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Fish Exp Rate",
+      "to": "Fishnet",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Item Storage",
+      "to": "Magnet Island",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sensitive Trees",
+      "to": "Sundrying",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugarcane",
+      "to": "Sugar",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Milk",
+      "to": "Increase Milk Efficiency",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sensitive Trees",
+      "to": "Bunches of Bananas",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Fishnet",
+      "to": "Larger Fish Nets",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sundrying",
+      "to": "Sundry Speed",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Self Hanging Trees",
+      "to": "Careful Coconut Shredding",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Filling Fruits",
+      "to": "Insanely Productive Trees",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugar",
+      "to": "Bonus Exp for Sugar",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugarcane",
+      "to": "Sugar Cane Harvest Efficiency",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugar Energy Boost",
+      "to": "Much Energy Boost When Sugar Eaten",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bonus Exp for Sugar",
+      "to": "Sugar Efficiency",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Much Energy Boost When Sugar Eaten",
+      "to": "Better Blood Sugar Control",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugar Efficiency",
+      "to": "Caramel Candies",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Fishnet",
+      "to": "Total Fish Spawn Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Larger Fish Nets",
+      "to": "Auto Fish Eater",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sensitive Trees",
+      "to": "Productive Banana Trees",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bigger Island",
+      "to": "Item Stacking",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Careful Coconut Shredding",
+      "to": "Shred Chance",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Careful Coconut Shredding",
+      "to": "Perfect Shredding",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Milk",
+      "to": "Golden Milk",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Golden Milk",
+      "to": "Golden Milk Efficiency",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Golden Milk Efficiency",
+      "to": "Golden Milk Chance",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Increase Milk Efficiency",
+      "to": "Shaker",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Tons of Bananas",
+      "to": "Golden Bananas",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bunches of Bananas",
+      "to": "Tons of Bananas",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lucky Monkey",
+      "to": "Banana Addiction",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Golden Bananas",
+      "to": "Lucky Monkey",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cacao Tree",
+      "to": "Addicted to Gold",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Addicted to Gold",
+      "to": "Much Gold, Much Strong",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Addicted to Gold",
+      "to": "Longer Gold Boost",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cacao Tree",
+      "to": "Addicted to Cacao",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Addicted to Cacao",
+      "to": "Much Cacao",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Addicted to Cacao",
+      "to": "Stronger Cacao",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sundry Speed",
+      "to": "Sundry Cooking",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sundry Speed",
+      "to": "Hotter Sun",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Self Hanging Trees",
+      "to": "Eat Everything",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Much Hot Heaters",
+      "to": "Selective Eater",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Shaker",
+      "to": "Huge Shaker",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Selective Eater",
+      "to": "Gourmet Eater",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Rare Fish Spawn Rate",
+      "to": "I Hate Common Fish",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "I Hate Common Fish",
+      "to": "I Hate All Commons",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Dock",
+      "to": "Oyster Spawner",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Oyster Spawner",
+      "to": "Interesting Docks",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Much Hot Heaters",
+      "to": "Pearl Hunter 6",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bonus Exp for Sugar",
+      "to": "Pearl Hunter 4",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Hotter Sun",
+      "to": "Pearl Hunter 2",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lemonade",
+      "to": "Pearl Hunter 9",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Huge Shaker",
+      "to": "Pearl Hunter 10",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lucky Monkey",
+      "to": "Pearl Hunter 8",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cursor Damage",
+      "to": "Pearl Hunter 7",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "I Hate All Commons",
+      "to": "Pearl Hunter 3",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Campfire",
+      "to": "Oyster",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Oyster",
+      "to": "Delicious Oyster Meat",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Delicious Oyster Meat",
+      "to": "Sensitive Oysters",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Dryer",
+      "to": "Much Hot Heaters",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Delicious Oyster Meat",
+      "to": "Double Oyster Meat",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Pearl",
+      "to": "Pearl Hunter 5",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cursor Damage",
+      "to": "Lucky Hands",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Item Stacking",
+      "to": "Item Storage",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Banana Tree",
+      "to": "Campfire",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cursor Damage",
+      "to": "Area Cracker",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugar",
+      "to": "Sugar Energy Boost",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sugar Energy Boost",
+      "to": "Auto Cane Cutter",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bonus Exp for Sugar",
+      "to": "Cane Heater",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Bigger Island",
+      "to": "Soil",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Soil",
+      "to": "Efficient Soil",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Shaker",
+      "to": "Barista",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Insanely Productive Trees",
+      "to": "Pearl Trees",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Pearl Trees",
+      "to": "Pearl Hunter 1",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Epic Fish Spawn",
+      "to": "Epic Nets",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Legendary Fish Spawn",
+      "to": "Auto Collector",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Sensitive Oysters",
+      "to": "Golden Meats",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Golden Meats",
+      "to": "More Gold, More Meat",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cane Heater",
+      "to": "Better Heater Capacity",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Increase Milk Efficiency",
+      "to": "Faster Shaking",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Legendary Fish Spawn",
+      "to": "Epic Fish Spawn Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Legendary Fish Spawn",
+      "to": "Legendary Fish Spawn Rate",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Banana Tree",
+      "to": "Sensitive Trees",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Coconut Milk",
+      "to": "Fishes Like Shell",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lemon Tree",
+      "to": "Efficient Citrus",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Efficient Citrus",
+      "to": "Shaking Lemons",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Shaking Lemons",
+      "to": "King of Limes",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Shaking Lemons",
+      "to": "King of Lemons",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Cacao Tree",
+      "to": "Bean Dices",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Lucky Monkey",
+      "to": "Golden Banana Shake",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Gluttonous",
+      "to": "Nut Lover",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Eat Everything",
+      "to": "Gluttonous",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Nut Lover",
+      "to": "Flesh Lover",
+      "name": "",
+      "description": ""
+    },
+    {
+      "from": "Gluttonous",
+      "to": "Green Lover",
+      "name": "",
+      "description": ""
+    }
+  ]
+}

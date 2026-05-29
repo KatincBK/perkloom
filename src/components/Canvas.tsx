@@ -225,6 +225,7 @@ export default function Canvas() {
   const demoMode = useStore((s) => s.demoMode);
   const projectType = useStore((s) => s.projectType);
   const selectedEdgeId = useStore((s) => s.selectedEdgeId);
+  const clipboardCount = useStore((s) => s.clipboardCount);
   const isFlowchart = projectType === 'flowchart';
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -246,6 +247,7 @@ export default function Canvas() {
   const [contextMenu, setContextMenu] = useState<
     | { type: 'node'; x: number; y: number; nodeId: string }
     | { type: 'edge'; x: number; y: number; parentId: string; childId: string }
+    | { type: 'canvas'; x: number; y: number; wx: number; wy: number }
     | null
   >(null);
 
@@ -839,11 +841,19 @@ export default function Canvas() {
           for (const id of ids) deleteNode(id);
         }
       }
-      if (e.ctrlKey && e.key === 'c') {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        // Ctrl+Shift+C → copy node with all its children
         const { selectedNodeIds: ids } = useStore.getState();
         if (ids.length > 0) {
           e.preventDefault();
           useStore.getState().copyNodes(ids);
+        }
+      } else if (e.ctrlKey && e.key === 'c') {
+        // Ctrl+C → single copy (node only, no children)
+        const { selectedNodeIds: ids } = useStore.getState();
+        if (ids.length > 0) {
+          e.preventDefault();
+          useStore.getState().copySingle(ids);
         }
       }
       if (e.ctrlKey && e.key === 'v') {
@@ -990,7 +1000,12 @@ export default function Canvas() {
       setContextMenu({ type: 'edge', x: e.clientX, y: e.clientY, parentId: fromId, childId: toId });
       return;
     }
-    setContextMenu(null);
+    // Empty canvas → paste menu, anchored to where the click landed (world coords)
+    const rect = viewportRef.current!.getBoundingClientRect();
+    const { camera: cam } = useStore.getState();
+    const wx = (e.clientX - rect.left - cam.x) / cam.zoom;
+    const wy = (e.clientY - rect.top - cam.y) / cam.zoom;
+    setContextMenu({ type: 'canvas', x: e.clientX, y: e.clientY, wx, wy });
   }, []);
 
   // --- build render data ---
@@ -1320,6 +1335,27 @@ export default function Canvas() {
             <div
               className="context-menu-item"
               onMouseDown={() => {
+                useStore.getState().copySingle([cm.nodeId]);
+                setContextMenu(null);
+              }}
+            >
+              <span>Single Copy</span>
+              <span className="context-menu-shortcut">Ctrl+C</span>
+            </div>
+            <div
+              className="context-menu-item"
+              onMouseDown={() => {
+                useStore.getState().copyNodes([cm.nodeId]);
+                setContextMenu(null);
+              }}
+            >
+              <span>Copy</span>
+              <span className="context-menu-shortcut">Ctrl+Shift+C</span>
+            </div>
+            <div className="context-menu-divider" />
+            <div
+              className="context-menu-item"
+              onMouseDown={() => {
                 useStore.getState().setNodeDisplayMode(
                   cm.nodeId,
                   isExpanded ? 'compact' : 'expanded',
@@ -1404,6 +1440,30 @@ export default function Canvas() {
               }}
             >
               Disconnect
+            </div>
+          </div>
+        );
+      })()}
+
+      {contextMenu?.type === 'canvas' && (() => {
+        const cm = contextMenu;
+        const canPaste = clipboardCount > 0;
+        return (
+          <div
+            className="context-menu"
+            style={{ left: cm.x, top: cm.y }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`context-menu-item${canPaste ? '' : ' disabled'}`}
+              onMouseDown={() => {
+                if (!canPaste) return;
+                useStore.getState().pasteNodes(cm.wx, cm.wy);
+                setContextMenu(null);
+              }}
+            >
+              <span>Paste</span>
+              <span className="context-menu-shortcut">Ctrl+V</span>
             </div>
           </div>
         );

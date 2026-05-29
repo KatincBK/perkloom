@@ -7,6 +7,7 @@ import { ProjectTypePicker, startNewProject } from './StartScreen';
 import { loadProjectFilePath } from '../loadProjectFile';
 import { checkInteractive } from '../updater';
 import { getVersion } from '@tauri-apps/api/app';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 interface MenuItem {
   label: string;
@@ -70,7 +71,8 @@ const SHORTCUTS = [
   { key: 'Double-click node', desc: 'Edit title' },
   { key: 'Drag from handle', desc: 'Connect / create child' },
   { key: 'Delete / Backspace', desc: 'Delete selected' },
-  { key: 'Ctrl+C', desc: 'Copy nodes' },
+  { key: 'Ctrl+C', desc: 'Single copy (node only)' },
+  { key: 'Ctrl+Shift+C', desc: 'Copy (with children)' },
   { key: 'Ctrl+V', desc: 'Paste nodes' },
   { key: 'Ctrl+Z', desc: 'Undo' },
   { key: 'Ctrl+Shift+Z', desc: 'Redo' },
@@ -251,6 +253,26 @@ export default function MenuBar() {
 
   const handleNewProject = () => setPickingType(true);
 
+  // Open a prefilled GitHub issue in the browser so reports carry build/OS info.
+  const handleReportBug = () => {
+    const body = [
+      '**Describe the bug**',
+      '',
+      '',
+      '**Steps to reproduce**',
+      '',
+      '',
+      '---',
+      `Perkloom: v${version || 'unknown'}`,
+      `Platform: ${navigator.platform}`,
+      `User agent: ${navigator.userAgent}`,
+    ].join('\n');
+    const url =
+      'https://github.com/KatincBK/perkloom/issues/new?body=' +
+      encodeURIComponent(body);
+    void openUrl(url);
+  };
+
   const dialogFilter = { name: 'Perkloom', extensions: ['perkloom'] };
   // Open accepts both .perkloom and .json. Three separate filters work better
   // on Windows than a single combined filter (rfd/IFileOpenDialog quirk where
@@ -268,6 +290,9 @@ export default function MenuBar() {
     try {
       await writeTextFile(path, JSON.stringify(data, null, 2));
       setFilePath(path);
+      // Settings now follow the saved file (e.g. a JSON imported then saved as
+      // .perkloom should persist snap settings under the new path).
+      useStore.setState({ settingsPath: path });
       addRecentFile(path);
       useStore.getState().setIsDirty(false);
       const fileName = path.split(/[\\/]/).pop() ?? path;
@@ -474,8 +499,14 @@ export default function MenuBar() {
     { label: 'Redo', shortcut: 'Ctrl+Shift+Z', action: () => useStore.getState().redo() },
     { divider: true, label: '' },
     {
-      label: 'Copy',
+      label: 'Single Copy',
       shortcut: 'Ctrl+C',
+      disabled: selectedNodeIds.length === 0,
+      action: () => useStore.getState().copySingle(selectedNodeIds),
+    },
+    {
+      label: 'Copy',
+      shortcut: 'Ctrl+Shift+C',
       disabled: selectedNodeIds.length === 0,
       action: () => useStore.getState().copyNodes(selectedNodeIds),
     },
@@ -575,6 +606,10 @@ export default function MenuBar() {
       label: 'Check for Updates...',
       action: () => { void checkInteractive(); },
     },
+    {
+      label: 'Report a Bug...',
+      action: handleReportBug,
+    },
   ];
 
   return (
@@ -615,6 +650,7 @@ export default function MenuBar() {
                 step={10}
                 value={autoLenDraft}
                 onChange={(e) => setAutoLenDraft(e.target.value)}
+                onFocus={(e) => e.currentTarget.select()}
                 onBlur={() => {
                   const v = parseFloat(autoLenDraft);
                   if (Number.isNaN(v)) {

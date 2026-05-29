@@ -840,6 +840,10 @@ body,
 }
 
 .context-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   padding: 6px 12px;
   font-size: 13px;
   color: var(--text-primary);
@@ -855,6 +859,35 @@ body,
 
 .context-menu-item-danger:hover {
   background: var(--danger);
+}
+
+/* Faded shortcut hint shown to the right of a menu label. */
+.context-menu-shortcut {
+  font-size: 11px;
+  opacity: 0.45;
+  letter-spacing: 0.02em;
+}
+
+.context-menu-item:hover .context-menu-shortcut {
+  opacity: 0.8;
+}
+
+/* Disabled item (e.g. Paste with an empty clipboard): visible but inert. */
+.context-menu-item.disabled {
+  color: var(--text-secondary);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.context-menu-item.disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.context-menu-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border-light);
 }
 
 /* ============================================================

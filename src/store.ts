@@ -17,6 +17,11 @@ import {
   edgeId,
   NamedSnapshot,
 } from './types';
+import {
+  loadFileSettings,
+  saveFileSettings,
+  type FileViewSettings,
+} from './fileSettings';
 
 export const NODE_WIDTH = 160;
 export const NODE_MIN_HEIGHT = 53;
@@ -258,8 +263,17 @@ interface TreeStore {
   angleSnap: number;
   demoMode: boolean;
   autoTargetLength: number;
+  /** Number of nodes currently on the clipboard (0 = paste disabled). */
+  clipboardCount: number;
   theme: 'night' | 'day';
   currentFilePath: string | null;
+  /**
+   * File identity used only for remembering per-file view settings. Equals
+   * currentFilePath for .perkloom; for imported .json (which opens as an
+   * unsaved doc with currentFilePath = null) this holds the source path so its
+   * snap settings can still persist. Never used for saving.
+   */
+  settingsPath: string | null;
   startScreenOpen: boolean;
   isDirty: boolean;
   minimapVisible: boolean;
@@ -337,6 +351,7 @@ interface TreeStore {
   setAllDisplayMode: (mode: NodeDisplayMode) => void;
 
   copyNodes: (ids: string[]) => void;
+  copySingle: (ids: string[]) => void;
   pasteNodes: (cx: number, cy: number) => void;
 
   autoLayout: (algorithm: LayoutAlgorithm) => void;
@@ -367,6 +382,7 @@ interface TreeStore {
     data: ProjectData,
     filePath: string | null,
     title: string,
+    settingsPath?: string | null,
   ) => string;
   switchTab: (id: string) => void;
   closeTab: (id: string) => void;
@@ -389,6 +405,8 @@ export interface ProjectData {
   projectType?: ProjectType;
   inspectorWidth?: number;
   snapshots?: SnapshotEntry[];
+  /** Snap/auto-length settings, embedded so they travel with the file. */
+  viewSettings?: FileViewSettings;
 }
 
 /** Full project state stored inside a named snapshot. */
@@ -480,8 +498,37 @@ const MAX_HISTORY = 100;
 let undoStack: Snapshot[] = [];
 let redoStack: Snapshot[] = [];
 
-// clipboard (module-level, not serialized)
-let clipboard: { nodes: SkillNode[]; rootIds: string[] } | null = null;
+// clipboard (module-level, not serialized). Carries the definitions referenced
+// by the copied nodes (dataTypes + any poolTypes their fields reference) so a
+// paste into a different file can re-create a missing data type by name.
+let clipboard: {
+  nodes: SkillNode[];
+  rootIds: string[];
+  dataTypes: Record<string, DataType>;
+  poolTypes: Record<string, PoolType>;
+} | null = null;
+
+// Collect the data type (+ referenced pool type) definitions used by a set of
+// nodes, deep-cloned, so a cross-file paste can re-create what's missing.
+function collectClipboardDefs(
+  nodeList: SkillNode[],
+  dataTypes: Record<string, DataType>,
+  poolTypes: Record<string, PoolType>,
+): { dataTypes: Record<string, DataType>; poolTypes: Record<string, PoolType> } {
+  const dts: Record<string, DataType> = {};
+  const pts: Record<string, PoolType> = {};
+  for (const n of nodeList) {
+    const dt = dataTypes[n.dataTypeId];
+    if (!dt || dts[dt.id]) continue;
+    dts[dt.id] = JSON.parse(JSON.stringify(dt));
+    for (const f of dt.fields) {
+      if (f.type === 'pool' && f.poolTypeId && poolTypes[f.poolTypeId] && !pts[f.poolTypeId]) {
+        pts[f.poolTypeId] = JSON.parse(JSON.stringify(poolTypes[f.poolTypeId]));
+      }
+    }
+  }
+  return { dataTypes: dts, poolTypes: pts };
+}
 
 // Snapshot full data stored outside Zustand to avoid rerender bloat.
 // The store only keeps lightweight NamedSnapshot metadata; the heavy
@@ -514,6 +561,7 @@ interface TabDocState {
   selectedEdgeId: string | null;
   editingNodeId: string | null;
   currentFilePath: string | null;
+  settingsPath: string | null;
   isDirty: boolean;
   inspectorWidth: number;
   counters: IdCounters;
@@ -570,8 +618,10 @@ export const useStore = create<TreeStore>((set, get) => ({
   angleSnap: 0,
   demoMode: false,
   autoTargetLength: 160,
+  clipboardCount: 0,
   theme: 'night',
   currentFilePath: null,
+  settingsPath: null,
   startScreenOpen: true,
   isDirty: false,
   minimapVisible: true,
@@ -943,15 +993,23 @@ export const useStore = create<TreeStore>((set, get) => ({
     if (get().mode === mode) return;
     get().pushHistory();
     set({ mode });
+    persistViewSettings();
   },
-  setGridSnap: (enabled) => set({ gridSnap: enabled }),
+  setGridSnap: (enabled) => {
+    set({ gridSnap: enabled });
+    persistViewSettings();
+  },
   setAngleSnap: (degrees) => {
     const allowed = [0, 5, 10, 15, 20, 30, 40, 45, 90];
     const v = allowed.includes(degrees) ? degrees : 0;
     set({ angleSnap: v });
+    persistViewSettings();
   },
   setDemoMode: (enabled) => set({ demoMode: enabled }),
-  setAutoTargetLength: (length) => set({ autoTargetLength: Math.max(20, length) }),
+  setAutoTargetLength: (length) => {
+    set({ autoTargetLength: Math.max(20, length) });
+    persistViewSettings();
+  },
   setTheme: (theme) => {
     if (theme === 'day') {
       document.documentElement.setAttribute('data-theme', 'day');
@@ -1542,7 +1600,7 @@ export const useStore = create<TreeStore>((set, get) => ({
   // --- clipboard ---
 
   copyNodes: (ids) => {
-    const { nodes } = get();
+    const { nodes, dataTypes, poolTypes } = get();
     // Collect selected + all their descendants
     const allIds = new Set<string>();
     for (const id of ids) {
@@ -1553,12 +1611,76 @@ export const useStore = create<TreeStore>((set, get) => ({
       .filter((id) => nodes[id])
       .map((id) => JSON.parse(JSON.stringify(nodes[id])) as SkillNode);
     // Root ids = the ones originally selected (top-level)
-    clipboard = { nodes: copied, rootIds: [...ids] };
+    clipboard = {
+      nodes: copied,
+      rootIds: [...ids],
+      ...collectClipboardDefs(copied, dataTypes, poolTypes),
+    };
+    set({ clipboardCount: copied.length });
+  },
+
+  // Copy only the given nodes, detached from their parents (no descendants),
+  // so they paste as standalone roots.
+  copySingle: (ids) => {
+    const { nodes, dataTypes, poolTypes } = get();
+    const copied = ids
+      .filter((id) => nodes[id])
+      .map((id) => {
+        const clone = JSON.parse(JSON.stringify(nodes[id])) as SkillNode;
+        clone.parentId = null;
+        return clone;
+      });
+    clipboard = {
+      nodes: copied,
+      rootIds: [...ids],
+      ...collectClipboardDefs(copied, dataTypes, poolTypes),
+    };
+    set({ clipboardCount: copied.length });
   },
 
   pasteNodes: (cx, cy) => {
     if (!clipboard || clipboard.nodes.length === 0) return;
     get().pushHistory();
+    const { dataTypes: destDataTypes, poolTypes: destPoolTypes } = get();
+
+    // Remap clipboard data types / pool types onto the destination file: reuse
+    // a same-named def if present, otherwise create it. Field ids are kept as-is
+    // (node.fieldValues are keyed by them and looked up per data type), so only
+    // the def ids and pool references need rewriting.
+    const newDataTypes: Record<string, DataType> = {};
+    const newPoolTypes: Record<string, PoolType> = {};
+    const dtRemap: Record<string, string> = {};
+    const ptRemap: Record<string, string> = {};
+
+    for (const pt of Object.values(clipboard.poolTypes)) {
+      const existing = Object.values(destPoolTypes).find((p) => p.name === pt.name);
+      if (existing) {
+        ptRemap[pt.id] = existing.id;
+      } else {
+        const newId = `pt-${counters.nextPoolTypeId++}`;
+        ptRemap[pt.id] = newId;
+        newPoolTypes[newId] = { ...JSON.parse(JSON.stringify(pt)), id: newId };
+      }
+    }
+
+    for (const dt of Object.values(clipboard.dataTypes)) {
+      const existing = Object.values(destDataTypes).find((d) => d.name === dt.name);
+      if (existing) {
+        dtRemap[dt.id] = existing.id;
+      } else {
+        const newId = `dt-${counters.nextDtId++}`;
+        dtRemap[dt.id] = newId;
+        const cloned = JSON.parse(JSON.stringify(dt)) as DataType;
+        cloned.id = newId;
+        for (const f of cloned.fields) {
+          if (f.type === 'pool' && f.poolTypeId && ptRemap[f.poolTypeId]) {
+            f.poolTypeId = ptRemap[f.poolTypeId];
+          }
+        }
+        newDataTypes[newId] = cloned;
+      }
+    }
+
     const idMap: Record<string, string> = {};
     for (const n of clipboard.nodes) {
       idMap[n.id] = `node-${counters.nextNodeId++}`;
@@ -1578,6 +1700,7 @@ export const useStore = create<TreeStore>((set, get) => ({
         ...n,
         id: newId,
         parentId: newParentId,
+        dataTypeId: dtRemap[n.dataTypeId] ?? n.dataTypeId,
         position: { x: cx + (n.position.x - avgX), y: cy + (n.position.y - avgY) },
       };
       if (newParentId) {
@@ -1588,6 +1711,8 @@ export const useStore = create<TreeStore>((set, get) => ({
     set((s) => ({
       nodes: { ...s.nodes, ...newNodes },
       edges: { ...s.edges, ...newEdges },
+      dataTypes: { ...s.dataTypes, ...newDataTypes },
+      poolTypes: { ...s.poolTypes, ...newPoolTypes },
       selectedNodeIds: Object.keys(newNodes),
     }));
   },
@@ -1996,8 +2121,10 @@ export const useStore = create<TreeStore>((set, get) => ({
   },
 
   getProjectData: () => {
-    const { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, namedSnapshots } =
-      get();
+    const {
+      nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, namedSnapshots,
+      mode, gridSnap, angleSnap, autoTargetLength,
+    } = get();
     // Rebuild full SnapshotEntry[] for serialization
     const snapshots: SnapshotEntry[] | undefined =
       namedSnapshots.length > 0
@@ -2009,7 +2136,10 @@ export const useStore = create<TreeStore>((set, get) => ({
             })
             .filter((e): e is SnapshotEntry => e !== null)
         : undefined;
-    return { nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, snapshots };
+    return {
+      nodes, dataTypes, poolTypes, edges, projectType, inspectorWidth, snapshots,
+      viewSettings: { mode, gridSnap, angleSnap, autoTargetLength },
+    };
   },
 
   loadProjectData: (data) => {
@@ -2094,6 +2224,9 @@ export const useStore = create<TreeStore>((set, get) => ({
     });
     if (typeof data.inspectorWidth === 'number') {
       get().setInspectorWidth(data.inspectorWidth);
+    }
+    if (data.viewSettings) {
+      applyViewSettings(data.viewSettings);
     }
     // Restore named snapshots from file
     snapshotDataMap.clear();
@@ -2382,6 +2515,7 @@ export const useStore = create<TreeStore>((set, get) => ({
       selectedEdgeId: null,
       editingNodeId: null,
       currentFilePath: null,
+      settingsPath: null,
       isDirty: false,
       namedSnapshots: [],
     }));
@@ -2392,9 +2526,12 @@ export const useStore = create<TreeStore>((set, get) => ({
     return id;
   },
 
-  openInNewTab: (data, filePath, title) => {
+  openInNewTab: (data, filePath, title, settingsPath) => {
     captureActiveIntoTab();
     const id = newTabId();
+    // .perkloom passes only filePath (settings tracked by the same path);
+    // imported .json passes a settingsPath while filePath stays null.
+    const resolvedSettingsPath = settingsPath ?? filePath;
     // Seed with the incoming project type so loadProjectData doesn't
     // inherit the previous tab's counters or state on its first set().
     set((s) => ({
@@ -2411,6 +2548,7 @@ export const useStore = create<TreeStore>((set, get) => ({
       selectedEdgeId: null,
       editingNodeId: null,
       currentFilePath: filePath,
+      settingsPath: resolvedSettingsPath,
       isDirty: false,
     }));
     Object.assign(counters, freshCounters());
@@ -2420,6 +2558,13 @@ export const useStore = create<TreeStore>((set, get) => ({
     // loadProjectData resets isDirty to false; re-apply currentFilePath
     // since its own set() call wipes it implicitly via spread above.
     if (filePath !== null) set({ currentFilePath: filePath });
+    set({ settingsPath: resolvedSettingsPath });
+    // Restore per-file view settings. Embedded viewSettings (.perkloom) win;
+    // otherwise fall back to localStorage (covers .json, which can't embed).
+    if (resolvedSettingsPath !== null && !data.viewSettings) {
+      const fs = loadFileSettings(resolvedSettingsPath);
+      if (fs) applyViewSettings(fs);
+    }
     return id;
   },
 
@@ -2442,6 +2587,7 @@ export const useStore = create<TreeStore>((set, get) => ({
         selectedEdgeId: snap.selectedEdgeId,
         editingNodeId: snap.editingNodeId,
         currentFilePath: snap.currentFilePath,
+        settingsPath: snap.settingsPath,
         isDirty: snap.isDirty,
       });
       Object.assign(counters, snap.counters);
@@ -2456,6 +2602,12 @@ export const useStore = create<TreeStore>((set, get) => ({
       }
       set({ namedSnapshots: snap.namedSnapshots });
       get().setInspectorWidth(snap.inspectorWidth);
+      // Re-apply the destination file's saved snap settings so switching
+      // between open files stays consistent with reopening them.
+      if (snap.settingsPath) {
+        const fs = loadFileSettings(snap.settingsPath);
+        if (fs) applyViewSettings(fs);
+      }
     }
     set((s) => ({
       activeTabId: id,
@@ -2496,6 +2648,7 @@ export const useStore = create<TreeStore>((set, get) => ({
           selectedEdgeId: null,
           editingNodeId: null,
           currentFilePath: null,
+          settingsPath: null,
           isDirty: false,
         });
       }
@@ -2513,6 +2666,31 @@ export const useStore = create<TreeStore>((set, get) => ({
   },
 }));
 
+// Persist the live view settings (snap mode / grid / angle / auto-length) for
+// the currently-open file so they are restored on reopen. Called by the snap
+// setters. No-op for unsaved (path-less) documents.
+function persistViewSettings() {
+  const s = useStore.getState();
+  if (!s.settingsPath) return;
+  saveFileSettings(s.settingsPath, {
+    mode: s.mode,
+    gridSnap: s.gridSnap,
+    angleSnap: s.angleSnap,
+    autoTargetLength: s.autoTargetLength,
+  });
+}
+
+// Apply a (possibly partial) FileViewSettings onto the live store without
+// triggering history/persistence side effects.
+function applyViewSettings(vs: Partial<FileViewSettings>) {
+  const patch: Partial<TreeStore> = {};
+  if (vs.mode) patch.mode = vs.mode;
+  if (typeof vs.gridSnap === 'boolean') patch.gridSnap = vs.gridSnap;
+  if (typeof vs.angleSnap === 'number') patch.angleSnap = vs.angleSnap;
+  if (typeof vs.autoTargetLength === 'number') patch.autoTargetLength = vs.autoTargetLength;
+  if (Object.keys(patch).length > 0) useStore.setState(patch);
+}
+
 // Snapshot the currently-active tab's live state back into its tabs[] entry.
 // Used before any tab switch/new/open so subsequent restoration works.
 function captureActiveIntoTab() {
@@ -2529,6 +2707,7 @@ function captureActiveIntoTab() {
     selectedEdgeId: s.selectedEdgeId,
     editingNodeId: s.editingNodeId,
     currentFilePath: s.currentFilePath,
+    settingsPath: s.settingsPath,
     isDirty: s.isDirty,
     inspectorWidth: s.inspectorWidth,
     counters: { ...counters },

@@ -33,7 +33,9 @@ export async function loadProjectFilePath(path: string): Promise<void> {
         useStore.getState().addToast(`Import başarısız: ${result.error}`, 'error');
         return;
       }
-      useStore.getState().openInNewTab(result.data, null, fileName);
+      // filePath stays null (imported JSON is an unsaved doc), but pass the
+      // source path as settingsPath so per-file snap settings still persist.
+      useStore.getState().openInNewTab(result.data, null, fileName, path);
       if (result.suggestedLayout) {
         useStore.getState().autoLayout(result.suggestedLayout);
       }

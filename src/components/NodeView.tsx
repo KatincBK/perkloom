@@ -64,6 +64,12 @@ export const NodeView = React.memo(function NodeView({ node, isSelected, mapLine
 
   const editingNodeId = useStore((s) => s.editingNodeId);
   const demoMode = useStore((s) => s.demoMode);
+  const isSearchMatch = useStore((s) => s.searchMatchIds.includes(node.id));
+  const isSearchActive = useStore(
+    (s) =>
+      s.searchActiveIndex >= 0 &&
+      s.searchMatchIds[s.searchActiveIndex] === node.id,
+  );
   const isEditing = editingNodeId === node.id && !demoMode;
   const [editValue, setEditValue] = useState(node.title);
 
@@ -142,7 +148,7 @@ export const NodeView = React.memo(function NodeView({ node, isSelected, mapLine
   return (
     <div
       ref={nodeRef}
-      className={`skill-node${isSelected ? ' selected' : ''}${!light ? ' dark-node' : ''}${isRoot ? ' root-node' : ''}${isIconMode ? ' icon-mode' : ''}${demoMode ? ' demo-mode' : ''}`}
+      className={`skill-node${isSelected ? ' selected' : ''}${!light ? ' dark-node' : ''}${isRoot ? ' root-node' : ''}${isIconMode ? ' icon-mode' : ''}${demoMode ? ' demo-mode' : ''}${isSearchMatch ? ' search-match' : ''}${isSearchActive ? ' search-active' : ''}`}
       data-node-id={node.id}
       onMouseMove={onLocalMove}
       onDrop={onDrop}

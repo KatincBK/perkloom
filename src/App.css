@@ -532,6 +532,76 @@ body,
 }
 
 /* ============================================================
+   SEARCH BAR (Ctrl+F)
+   ============================================================ */
+
+.search-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+.search-input {
+  width: 200px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.search-count {
+  min-width: 42px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.search-nav-btn,
+.search-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.search-nav-btn:hover:not(:disabled),
+.search-close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.search-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ============================================================
    EDGES
    ============================================================ */
 
@@ -712,6 +782,21 @@ body,
   box-shadow:
     0 0 0 4px var(--accent-dim),
     0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Ctrl+F search hits: amber outline on every match, brighter ring + glow on
+   the one the camera is currently centered on. */
+.skill-node.search-match {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.skill-node.search-active {
+  outline: 4px solid #fbbf24;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 6px rgba(245, 158, 11, 0.35),
+    0 2px 14px rgba(0, 0, 0, 0.3);
 }
 
 .node-title {
@@ -1312,6 +1397,21 @@ body,
   margin-bottom: 0;
   flex: 1;
   min-width: 0;
+}
+
+/* Multi-select inspector: marks a shared field whose value differs across the
+   selected nodes. */
+.mixed-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.4;
 }
 
 .field-label-editable {

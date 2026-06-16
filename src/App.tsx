@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
 import MenuBar from './components/MenuBar';
 import Canvas from './components/Canvas';
+import SearchBar from './components/SearchBar';
 import Inspector from './components/Inspector';
 import Minimap from './components/Minimap';
 import StartScreen from './components/StartScreen';
@@ -181,6 +182,7 @@ export default function App() {
             <ErrorBoundary>
               <Minimap />
             </ErrorBoundary>
+            <SearchBar />
             <Toasts />
           </div>
           <ErrorBoundary>

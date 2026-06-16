@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useStore } from '../store';
-import { EdgeData, FieldDefinition, FieldType, SkillNode, PoolEntry, edgeId } from '../types';
+import { DataType, EdgeData, FieldDefinition, FieldType, SkillNode, PoolEntry, edgeId } from '../types';
 
 // Apply persisted global width synchronously at import so the first render
 // uses the user's last-used width before the store / any loaded project
@@ -840,6 +840,238 @@ function EdgeInspector({
 }
 
 // ============================================================
+//  MULTI-NODE INSPECTOR (shift-select several nodes)
+// ============================================================
+
+// Field types that can be bulk-edited. Dropdown/pool are excluded because their
+// option/pool identities differ across data types and can't be matched safely.
+const MULTI_EDITABLE: FieldType[] = ['text', 'number', 'boolean'];
+
+// Fields shared by every selected node, matched by name + type across their
+// (possibly different) data types. Order follows the first node's schema.
+function computeCommonFields(
+  ids: string[],
+  nodes: Record<string, SkillNode>,
+  dataTypes: Record<string, DataType>,
+): { name: string; type: FieldType }[] {
+  const fieldLists = ids.map((id) => {
+    const n = nodes[id];
+    const dt = n ? dataTypes[n.dataTypeId] : undefined;
+    return dt ? dt.fields : [];
+  });
+  if (fieldLists.length === 0) return [];
+  const result: { name: string; type: FieldType }[] = [];
+  for (const f of fieldLists[0]) {
+    if (!MULTI_EDITABLE.includes(f.type)) continue;
+    if (result.some((r) => r.name === f.name && r.type === f.type)) continue;
+    const inAll = fieldLists.every((list) =>
+      list.some((g) => g.name === f.name && g.type === f.type),
+    );
+    if (inAll) result.push({ name: f.name, type: f.type });
+  }
+  return result;
+}
+
+// Collapse a common field's value across the selection: a single shared value,
+// or "mixed" when the nodes disagree. Unset normalizes to ''/false so two
+// not-yet-filled nodes read as equal.
+function aggregateField(
+  ids: string[],
+  nodes: Record<string, SkillNode>,
+  dataTypes: Record<string, DataType>,
+  name: string,
+  type: FieldType,
+): { mixed: boolean; value: string | number | boolean } {
+  let value: string | number | boolean | undefined;
+  let seen = false;
+  let mixed = false;
+  for (const id of ids) {
+    const n = nodes[id];
+    if (!n) continue;
+    const dt = dataTypes[n.dataTypeId];
+    if (!dt) continue;
+    const f = dt.fields.find((g) => g.name === name && g.type === type);
+    if (!f) continue;
+    const raw = n.fieldValues[f.id];
+    const norm: string | number | boolean =
+      type === 'boolean'
+        ? typeof raw === 'boolean'
+          ? raw
+          : false
+        : type === 'number'
+          ? typeof raw === 'number'
+            ? raw
+            : ''
+          : typeof raw === 'string'
+            ? raw
+            : '';
+    if (!seen) {
+      value = norm;
+      seen = true;
+    } else if (norm !== value) {
+      mixed = true;
+    }
+  }
+  return { mixed, value: value ?? (type === 'boolean' ? false : '') };
+}
+
+function MultiFieldEditor({
+  ids,
+  name,
+  type,
+}: {
+  ids: string[];
+  name: string;
+  type: FieldType;
+}) {
+  const nodes = useStore((s) => s.nodes);
+  const dataTypes = useStore((s) => s.dataTypes);
+  const { mixed, value } = aggregateField(ids, nodes, dataTypes, name, type);
+  const boolRef = useRef<HTMLInputElement>(null);
+
+  // Native checkboxes show the dash only via the imperative `indeterminate`.
+  useEffect(() => {
+    if (type === 'boolean' && boolRef.current) {
+      boolRef.current.indeterminate = mixed;
+    }
+  }, [type, mixed, value]);
+
+  const apply = (v: string | number | boolean) =>
+    useStore.getState().setCommonFieldValue(ids, name, type, v);
+
+  return (
+    <div className="inspector-field field-editor">
+      <div className="field-header">
+        <label className="inspector-label">{name}</label>
+        {mixed && (
+          <span
+            className="mixed-badge"
+            title="Seçili node'larda farklı değerler — düzenlersen hepsi aynı olur"
+          >
+            Çeşitli
+          </span>
+        )}
+      </div>
+
+      {type === 'text' && (
+        <AutoGrowTextarea
+          storageKey={`multi-${name}`}
+          className="inspector-textarea"
+          value={mixed ? '' : (value as string)}
+          placeholder={mixed ? 'Çeşitli değerler — yazınca hepsi değişir' : ''}
+          onChange={(e) => apply(e.target.value)}
+          minRows={3}
+        />
+      )}
+
+      {type === 'number' && (
+        <input
+          className="inspector-input"
+          type="number"
+          value={mixed ? '' : (value as number | string)}
+          placeholder={mixed ? 'Çeşitli' : ''}
+          onChange={(e) => apply(parseFloat(e.target.value) || 0)}
+        />
+      )}
+
+      {type === 'boolean' && (
+        <label className="boolean-toggle">
+          <input
+            ref={boolRef}
+            type="checkbox"
+            checked={mixed ? false : (value as boolean)}
+            onChange={(e) => apply(e.target.checked)}
+          />
+          <span>{mixed ? 'Çeşitli' : value ? 'True' : 'False'}</span>
+        </label>
+      )}
+    </div>
+  );
+}
+
+function MultiNodeInspector({ ids }: { ids: string[] }) {
+  const nodes = useStore((s) => s.nodes);
+  const dataTypes = useStore((s) => s.dataTypes);
+  const projectType = useStore((s) => s.projectType);
+  const isFlowchart = projectType === 'flowchart';
+
+  const presentIds = ids.filter((id) => nodes[id]);
+  const dtList = Object.values(dataTypes);
+  const dtIds = Array.from(
+    new Set(presentIds.map((id) => nodes[id].dataTypeId)),
+  );
+  const allSameDt = dtIds.length === 1;
+  const commonFields = computeCommonFields(presentIds, nodes, dataTypes);
+
+  return (
+    <div className="inspector">
+      <InspectorResizeHandle />
+      <div className="inspector-header">{presentIds.length} node seçili</div>
+      <div className="inspector-content">
+        {!isFlowchart && (
+          <div className="inspector-field">
+            <label className="inspector-label">Veri Tipi</label>
+            <select
+              className="inspector-select"
+              value={allSameDt ? dtIds[0] : ''}
+              onChange={(e) => {
+                if (e.target.value)
+                  useStore
+                    .getState()
+                    .setNodesDataType(presentIds, e.target.value);
+              }}
+            >
+              {!allSameDt && <option value="">Çeşitli</option>}
+              {dtList.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <p className="hint" style={{ marginTop: 6 }}>
+              Seçilen tip tüm seçili node'lara uygulanır.
+            </p>
+          </div>
+        )}
+
+        <div className="field-sub-label">Ortak Alanlar</div>
+        {commonFields.length > 0 ? (
+          commonFields.map((cf) => (
+            <MultiFieldEditor
+              key={`${cf.name}|${cf.type}`}
+              ids={presentIds}
+              name={cf.name}
+              type={cf.type}
+            />
+          ))
+        ) : (
+          <p className="hint">
+            Seçili node'ların ortak düzenlenebilir alanı yok.
+            {!allSameDt &&
+              " Aynı isim ve tipte alan paylaşan node'ları birlikte seç."}
+          </p>
+        )}
+
+        <div className="inspector-info">
+          <div className="info-row">
+            <span className="info-label">Seçili</span>
+            <span className="info-value">{presentIds.length} node</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Veri tipi</span>
+            <span className="info-value">
+              {allSameDt
+                ? dataTypes[dtIds[0]]?.name ?? '—'
+                : `${dtIds.length} farklı`}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 //  INSPECTOR
 // ============================================================
 
@@ -893,6 +1125,10 @@ export default function Inspector() {
         isFlowchart={isFlowchart}
       />
     );
+  }
+
+  if (selectedNodeIds.length > 1) {
+    return <MultiNodeInspector ids={selectedNodeIds} />;
   }
 
   if (!node) {

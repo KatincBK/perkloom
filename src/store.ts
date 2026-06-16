@@ -124,6 +124,70 @@ export function computeNodeHeight(
   return NODE_MIN_HEIGHT + titleExtra + imageExtra + extra;
 }
 
+// Find nodes whose title or any text field contains the query. Matches are
+// returned in canvas reading order (top-to-bottom, then left-to-right) so the
+// next/prev arrows walk them the way the user sees them.
+function computeSearchMatches(
+  query: string,
+  nodes: Record<string, SkillNode>,
+  dataTypes: Record<string, DataType>,
+): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const matched: SkillNode[] = [];
+  for (const n of Object.values(nodes)) {
+    let hay = n.title.toLowerCase();
+    const dt = dataTypes[n.dataTypeId];
+    if (dt) {
+      for (const f of dt.fields) {
+        if (f.type === 'text') {
+          const v = n.fieldValues[f.id];
+          if (typeof v === 'string' && v) hay += '\n' + v.toLowerCase();
+        }
+      }
+    }
+    if (hay.includes(q)) matched.push(n);
+  }
+  matched.sort(
+    (a, b) => a.position.y - b.position.y || a.position.x - b.position.x,
+  );
+  return matched.map((n) => n.id);
+}
+
+// Re-map a node's field values when its data type changes. Values carry over
+// positionally per field type (Nth text → Nth text, …); dropdown values only
+// survive if the chosen option id still exists, pool values only if the field
+// points at the same pool type.
+function remapFieldValues(
+  node: SkillNode,
+  oldDt: DataType | undefined,
+  newDt: DataType | undefined,
+): Record<string, string | number | boolean | PoolEntry[]> {
+  const newValues: Record<string, string | number | boolean | PoolEntry[]> = {};
+  if (!oldDt || !newDt) return newValues;
+  const oldByType: Record<FieldType, FieldDefinition[]> = {
+    text: [], number: [], boolean: [], dropdown: [], pool: [],
+  };
+  for (const f of oldDt.fields) oldByType[f.type].push(f);
+  for (const newField of newDt.fields) {
+    const oldField = oldByType[newField.type].shift();
+    if (!oldField) continue;
+    const oldVal = node.fieldValues[oldField.id];
+    if (oldVal === undefined) continue;
+    if (newField.type === 'pool') {
+      if (oldField.poolTypeId !== newField.poolTypeId) continue;
+      newValues[newField.id] = oldVal;
+    } else if (newField.type === 'dropdown') {
+      if (newField.dropdownOptions.some((o) => o.id === oldVal)) {
+        newValues[newField.id] = oldVal;
+      }
+    } else {
+      newValues[newField.id] = oldVal;
+    }
+  }
+  return newValues;
+}
+
 // --- initial data ---
 
 const DATA_TYPE_COLORS = [
@@ -280,6 +344,17 @@ interface TreeStore {
   inspectorWidth: number;
   toasts: Toast[];
 
+  // Search (Ctrl+F): match node title / text fields, step through hits.
+  searchOpen: boolean;
+  searchQuery: string;
+  searchMatchIds: string[];
+  searchActiveIndex: number;
+  openSearch: () => void;
+  closeSearch: () => void;
+  setSearchQuery: (q: string) => void;
+  searchNext: () => void;
+  searchPrev: () => void;
+
   setInspectorWidth: (w: number) => void;
   addNode: (x: number, y: number) => string;
   deleteNode: (id: string) => void;
@@ -318,6 +393,7 @@ interface TreeStore {
   renameDataType: (id: string, name: string) => void;
   setDataTypeColor: (id: string, color: string) => void;
   setNodeDataType: (nodeId: string, dataTypeId: string) => void;
+  setNodesDataType: (nodeIds: string[], dataTypeId: string) => void;
   setNodeColor: (nodeId: string, color: string | null) => void;
   deleteDataType: (id: string, convertTo: string | null) => void;
 
@@ -345,6 +421,17 @@ interface TreeStore {
 
   setEditingNodeId: (id: string | null) => void;
   setFieldValue: (nId: string, fId: string, v: string | number | boolean) => void;
+  /**
+   * Set a field on many nodes at once, matching the target field by name+type
+   * within each node's own data type (ids may differ across data types). Used
+   * by the multi-select inspector to bulk-edit a shared variable.
+   */
+  setCommonFieldValue: (
+    nodeIds: string[],
+    fieldName: string,
+    fieldType: FieldType,
+    value: string | number | boolean,
+  ) => void;
 
   setNodeImage: (nId: string, data: string | null) => void;
   setNodeDisplayMode: (nId: string, mode: NodeDisplayMode) => void;
@@ -629,6 +716,10 @@ export const useStore = create<TreeStore>((set, get) => ({
   toasts: [],
   namedSnapshots: [],
   snapshotPanelOpen: false,
+  searchOpen: false,
+  searchQuery: '',
+  searchMatchIds: [],
+  searchActiveIndex: -1,
 
   setInspectorWidth: (w) => {
     const clamped = Math.min(720, Math.max(240, Math.round(w)));
@@ -1036,6 +1127,38 @@ export const useStore = create<TreeStore>((set, get) => ({
       .filter((n) => n.parentId === parentId)
       .map((n) => n.id),
 
+  // --- search (Ctrl+F) ---
+
+  openSearch: () => set({ searchOpen: true }),
+  closeSearch: () =>
+    set({
+      searchOpen: false,
+      searchQuery: '',
+      searchMatchIds: [],
+      searchActiveIndex: -1,
+    }),
+  setSearchQuery: (q) => {
+    const { nodes, dataTypes } = get();
+    const ids = computeSearchMatches(q, nodes, dataTypes);
+    set({
+      searchQuery: q,
+      searchMatchIds: ids,
+      searchActiveIndex: ids.length > 0 ? 0 : -1,
+    });
+  },
+  searchNext: () =>
+    set((s) => {
+      const n = s.searchMatchIds.length;
+      if (n === 0) return s;
+      return { searchActiveIndex: (s.searchActiveIndex + 1) % n };
+    }),
+  searchPrev: () =>
+    set((s) => {
+      const n = s.searchMatchIds.length;
+      if (n === 0) return s;
+      return { searchActiveIndex: (s.searchActiveIndex - 1 + n) % n };
+    }),
+
   // --- data type ---
 
   addDataType: () => {
@@ -1096,42 +1219,39 @@ export const useStore = create<TreeStore>((set, get) => ({
     set((s) => {
       const node = s.nodes[nodeId];
       if (!node || node.dataTypeId === dataTypeId) return s;
-      const oldDt = s.dataTypes[node.dataTypeId];
-      const newDt = s.dataTypes[dataTypeId];
-      const newValues: Record<string, string | number | boolean | PoolEntry[]> = {};
-      if (oldDt && newDt) {
-        // Queue of old fields per type — positional match (Nth text → Nth text)
-        const oldByType: Record<FieldType, FieldDefinition[]> = {
-          text: [], number: [], boolean: [], dropdown: [], pool: [],
-        };
-        for (const f of oldDt.fields) oldByType[f.type].push(f);
-
-        for (const newField of newDt.fields) {
-          const oldField = oldByType[newField.type].shift();
-          if (!oldField) continue;
-          const oldVal = node.fieldValues[oldField.id];
-          if (oldVal === undefined) continue;
-
-          if (newField.type === 'pool') {
-            // Only carry entries if new field points at same pool type
-            if (oldField.poolTypeId !== newField.poolTypeId) continue;
-            newValues[newField.id] = oldVal;
-          } else if (newField.type === 'dropdown') {
-            // Carry only if the stored option still exists in the new field
-            if (newField.dropdownOptions.some((o) => o.id === oldVal)) {
-              newValues[newField.id] = oldVal;
-            }
-          } else {
-            newValues[newField.id] = oldVal;
-          }
-        }
-      }
+      const newValues = remapFieldValues(
+        node,
+        s.dataTypes[node.dataTypeId],
+        s.dataTypes[dataTypeId],
+      );
       return {
         nodes: {
           ...s.nodes,
           [nodeId]: { ...node, dataTypeId, fieldValues: newValues },
         },
       };
+    });
+  },
+
+  setNodesDataType: (nodeIds, dataTypeId) => {
+    get().pushHistory();
+    set((s) => {
+      const newDt = s.dataTypes[dataTypeId];
+      if (!newDt) return s;
+      const nodes = { ...s.nodes };
+      let changed = false;
+      for (const id of nodeIds) {
+        const node = nodes[id];
+        if (!node || node.dataTypeId === dataTypeId) continue;
+        const newValues = remapFieldValues(
+          node,
+          s.dataTypes[node.dataTypeId],
+          newDt,
+        );
+        nodes[id] = { ...node, dataTypeId, fieldValues: newValues };
+        changed = true;
+      }
+      return changed ? { nodes } : s;
     });
   },
 
@@ -1565,6 +1685,31 @@ export const useStore = create<TreeStore>((set, get) => ({
           },
         },
       };
+    });
+  },
+
+  setCommonFieldValue: (nodeIds, fieldName, fieldType, value) => {
+    set((s) => {
+      const nodes = { ...s.nodes };
+      let changed = false;
+      for (const id of nodeIds) {
+        const node = nodes[id];
+        if (!node) continue;
+        const dt = s.dataTypes[node.dataTypeId];
+        if (!dt) continue;
+        const field = dt.fields.find(
+          (f) => f.name === fieldName && f.type === fieldType,
+        );
+        if (!field) continue;
+        nodes[id] = {
+          ...node,
+          fieldValues: { ...node.fieldValues, [field.id]: value },
+        };
+        changed = true;
+      }
+      // Bulk edits are explicit operations — mark the doc dirty so they get
+      // saved/recovered even though single text edits don't push history.
+      return changed ? { nodes, isDirty: true } : s;
     });
   },
 

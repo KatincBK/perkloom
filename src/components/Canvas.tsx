@@ -226,6 +226,8 @@ export default function Canvas() {
   const projectType = useStore((s) => s.projectType);
   const selectedEdgeId = useStore((s) => s.selectedEdgeId);
   const clipboardCount = useStore((s) => s.clipboardCount);
+  const searchMatchIds = useStore((s) => s.searchMatchIds);
+  const searchActiveIndex = useStore((s) => s.searchActiveIndex);
   const isFlowchart = projectType === 'flowchart';
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -268,6 +270,44 @@ export default function Canvas() {
       y: rect.height / 3,
     });
   }, []);
+
+  // --- pan camera to the active search match ---
+  useEffect(() => {
+    if (searchActiveIndex < 0) return;
+    const id = searchMatchIds[searchActiveIndex];
+    const el = viewportRef.current;
+    if (!id || !el) return;
+    const node = useStore.getState().nodes[id];
+    if (!node) return;
+
+    const rect = el.getBoundingClientRect();
+    const { camera: cam } = useStore.getState();
+    // Node position is its center (skill-node uses translate(-50%, -50%)), so
+    // centering it means placing position*zoom at the viewport midpoint.
+    const targetX = rect.width / 2 - node.position.x * cam.zoom;
+    const targetY = rect.height / 2 - node.position.y * cam.zoom;
+    const startX = cam.x;
+    const startY = cam.y;
+    if (Math.abs(targetX - startX) < 0.5 && Math.abs(targetY - startY) < 0.5) {
+      return;
+    }
+
+    const DURATION = 280;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    const t0 = performance.now();
+    let raf = 0;
+    const step = () => {
+      const t = Math.min(1, (performance.now() - t0) / DURATION);
+      const e = ease(t);
+      useStore.getState().setCamera({
+        x: startX + (targetX - startX) * e,
+        y: startY + (targetY - startY) * e,
+      });
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [searchActiveIndex, searchMatchIds]);
 
   // --- close context menu on outside click ---
   useEffect(() => {
@@ -933,6 +973,18 @@ export default function Canvas() {
       e.preventDefault();
     } else if (nodeEl) {
       const nodeId = nodeEl.getAttribute('data-node-id')!;
+      // Shift-click toggles a node in/out of the selection without starting a
+      // drag — a pure selection gesture for building a multi-selection.
+      if (e.shiftKey) {
+        const currentIds = useStore.getState().selectedNodeIds;
+        const next = currentIds.includes(nodeId)
+          ? currentIds.filter((id) => id !== nodeId)
+          : [...currentIds, nodeId];
+        useStore.getState().selectNodes(next);
+        interactionRef.current = { type: 'idle' };
+        e.preventDefault();
+        return;
+      }
       useStore.getState().pushHistory();
       const currentIds = useStore.getState().selectedNodeIds;
       // If clicking a node already in multi-selection, keep the group
